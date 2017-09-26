@@ -26,13 +26,13 @@ const byte PIN_GATE2 = 9;
 const byte RELAY_ON  = 0;
 const byte RELAY_OFF = 1;
 
-SNAPChannelSoftwareSerial snapChannel = SNAPChannelSoftwareSerial(PIN_RS485_RX, PIN_RS485_TX, SNAP_SPEED);
+SNAPChannelSoftwareSerial snapChannel = SNAPChannelSoftwareSerial(PIN_RS485_RX, PIN_RS485_TX);
 SNAP<16> snap = SNAP<16>(&snapChannel, SNAP_ADDRESS_DIMMER1, PIN_RS485_TX_CONTROL);
 
 int noLoop = 0;
 
 void setup() {
-  // pinMode(LED_BUILTIN, OUTPUT);
+  snapMaster.begin(SNAP_SPEED);
 
   pinMode(PIN_GATE1, OUTPUT);
   pinMode(PIN_GATE2, OUTPUT);
@@ -54,7 +54,7 @@ void loop() {
       powerLight(powerByte1, powerByte2);
     }
 
-    snap.releaseLock();
+    snap.releaseReceive();
   }
 } // loop
 

@@ -11,7 +11,7 @@
 #include "CoilManager.h"
 
 
-SNAPChannelHardwareSerial snapChannelMaster = SNAPChannelHardwareSerial(&Serial3, SNAP_SPEED);
+SNAPChannelHardwareSerial snapChannelMaster = SNAPChannelHardwareSerial(&Serial3);
 SNAP<16> snapMaster = SNAP<16>(&snapChannelMaster, SNAP_ADDRESS_MASTER, 24);
 
 Debouncer<32> debouncer;
@@ -19,6 +19,9 @@ CoilManager coilManager;
 
 void setup() {
   Serial.begin(115200);
+
+  snapMaster.begin(SNAP_SPEED);
+  snapMaster.setPinRxDebug(LED_BUILTIN);
 
   SPI.begin();
   { // config for ShiftIn read
@@ -105,7 +108,7 @@ void testCommand(const byte * commands) {
     snapMaster.sendStart(SNAP_ADDRESS_RFRECEIVER, SNAP_NO_ACK);
     snapMaster.sendDataByte('?');
     snapMaster.sendMessage();
-    snapMaster.waitForAck();
+    // snapMaster.waitForAck();
 
     uint16_t duration = millis();
     while (!snapMaster.receivePacket() && millis() - duration < 20) ;
@@ -117,7 +120,7 @@ void testCommand(const byte * commands) {
       Serial.print("SNAP response received in ");
       Serial.print(duration);
       Serial.println("ms");
-      snapMaster.releaseLock();
+      snapMaster.releaseReceive();
     } else {
       Serial.println("no response");
     }
