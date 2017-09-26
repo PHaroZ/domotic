@@ -1,0 +1,2 @@
+void processRcSwitch();
+void processSnap();
