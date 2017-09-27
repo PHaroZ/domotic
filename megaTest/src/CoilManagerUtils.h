@@ -35,6 +35,8 @@ struct ShutterState {
   int8_t            closingPercentDiffRequested = 0;
   // if isMoving, when it starts (0 means not moving)
   uint32_t          startMovingAt = 0;
+  // 1 if last move is for closing, 0 otherwise
+  bool              lastMoveForClosing = 0;
   ShutterState(ShutterPowerGroup& powerGroup,
     uint32_t                    fullMovingTime) : powerGroup(powerGroup), fullMovingTime(fullMovingTime),
     closingPercent(0),

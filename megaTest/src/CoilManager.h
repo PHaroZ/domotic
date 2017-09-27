@@ -75,6 +75,7 @@ private:
 
     shutterState.powerGroup.noSimultaneousMoving--;
     shutterState.closingPercentLast = shutterState.closingPercent;
+    shutterState.lastMoveForClosing = shutterState.closingPercentDiffRequested > 0;
     shutterState.closingPercentDiffRequested = 0;
     shutterState.startMovingAt = 0;
     this->setCoilState(this->getShutterCoilIndexOppening(id), 0);
@@ -85,7 +86,7 @@ private:
     uint32_t now = millis();
 
     for (uint8_t id; id < this->noShutter; id++) {
-      ShutterState& shutterState = shutterStates[id];
+      ShutterState& shutterState = this->shutterStates[id];
       if (shutterState.startMovingAt) { // it is moving
         // update its state & check if it must be stoppped
         int8_t progressPercent = (now - shutterState.startMovingAt) / 0.01 / shutterState.fullMovingTime;
@@ -169,6 +170,24 @@ public:
   void shutterCloseAll() {
     for (uint8_t id; id < this->noShutter; id++) {
       this->shutterSetClosingPercent(id, 100);
+    }
+  }
+
+  void shutterSwith(uint8_t id) {
+    if (id < this->noShutter) {
+      ShutterState& shutterState = this->shutterStates[id];
+
+      Serial.print("shutterSwith ");
+      Serial.println(id);
+
+      // is it moving ?
+      if (shutterState.startMovingAt) {
+        // yes, stop it
+        this->shutterStop(id);
+      } else {
+        // not moving, start in opposite direction as last move
+        this->shutterSetClosingPercent(id, shutterState.lastMoveForClosing ? 0 : 100);
+      }
     }
   }
 

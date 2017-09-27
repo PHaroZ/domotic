@@ -9,6 +9,8 @@ const int16_t SNAP_NO_ACK             = 0;
 const uint8_t SNAP_ADDRESS_MASTER     = 1;
 const uint8_t SNAP_ADDRESS_DIMMER1    = 2;
 const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
+const uint8_t RS485_PIN_TX_CONTROL    = 24;
+HardwareSerial * RS485_SERIAL         = &Serial3;
 
 const bool COIL_ON       = LOW;
 const bool COIL_OFF      = HIGH;

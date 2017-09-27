@@ -3,36 +3,39 @@
 
 #include "main.h"
 
-#include "SNAP.h"
-#include "SNAPChannelHardwareSerial.h"
+#include "RemoteDeviceManager.h"
 
 #include "SPI.h"
 #include "Debouncer.h"
 #include "CoilManager.h"
 
+RemoteDeviceManager removeDeviceManager;
+RemoteDevice remoteDevices[RemoteDeviceIndex::count] = {
+  RemoteDevice(SNAP_ADDRESS_RFRECEIVER, 20, 100, onRfReceive),
+};
 
-SNAPChannelHardwareSerial snapChannelMaster = SNAPChannelHardwareSerial(&Serial3);
-SNAP<16> snapMaster = SNAP<16>(&snapChannelMaster, SNAP_ADDRESS_MASTER, 24);
-
-Debouncer<32> debouncer;
+Debouncer<16> rfDebouncer;
+Debouncer<32> switchDebouncer;
 CoilManager coilManager;
 
 void setup() {
   Serial.begin(115200);
 
-  snapMaster.begin(SNAP_SPEED);
-  snapMaster.setPinRxDebug(LED_BUILTIN);
+  removeDeviceManager.begin(remoteDevices);
 
   SPI.begin();
   { // config for ShiftIn read
     pinMode(SPI_SS_SWITCH, OUTPUT);
     digitalWrite(SPI_SS_SWITCH, HIGH);
   }
-  debouncer.begin(HIGH);
+  rfDebouncer.begin(LOW);
+  switchDebouncer.begin(HIGH);
   coilManager.begin();
 }
 
 void loop() {
+  removeDeviceManager.process();
+
   if (Serial.available() > 0) {
     long startAt = millis();
     byte data[16];
@@ -52,13 +55,12 @@ void loop() {
   }
 
   {
-    if (debouncer.debounce(getShiftInData(2))) {
-      if (!debouncer.state(8))
-        coilManager.binarySwitch(0);
-      for (uint8_t i = 0; i < debouncer.getDataWidth(); i++) {
-        Serial.print(debouncer.state(i));
+    if (switchDebouncer.debounce(getShiftInData(2))) {
+      for (uint8_t i = 0; i < switchDebouncer.getDataWidth(); i++) {
+        if (!switchDebouncer.state(i)) {
+          coilManager.binarySwitch(i);
+        }
       }
-      Serial.println();
     }
   }
 
@@ -79,6 +81,31 @@ uint32_t getShiftInData(uint8_t size) {
   SPI.transfer(&shiftInData, size);
   SPI.endTransaction();
   return shiftInData;
+}
+
+void onRfReceive(uint8_t * data, size_t size) {
+  uint16_t value = data[0] << 8 | data[1];
+
+  if (value != 0) {
+    Serial.print("SNAP response from rfReceiver \"");
+    Serial.print(value, BIN);
+    Serial.println("\"");
+    for (size_t i = 0; i < 16; i++) {
+      if (bitRead(value, i)) {
+        coilManager.shutterSwith(i);
+      }
+    }
+  }
+}
+
+void actionDimmer1(byte power1, byte power2) {
+  SNAP<16> snap = removeDeviceManager.getSnap();
+  snap.waitForAck();
+  snap.sendStart(SNAP_ADDRESS_DIMMER1, SNAP_ACK_WAIT_TIME);
+  snap.sendDataByte('L');
+  snap.sendDataByte(power1);
+  snap.sendDataByte(power2);
+  snap.sendMessage();
 }
 
 void debugCpuSpeed(uint16_t noLoop) {
@@ -103,35 +130,5 @@ void testCommand(const byte * commands) {
     coilManager.shutterSetClosingPercent(commands[1], commands[2]);
   } else if (0x3 == commands[0]) {
     coilManager.binarySwitch(commands[1]);
-  } else if (0x4 == commands[0]) {
-    // snapMaster.waitForAck();
-    snapMaster.sendStart(SNAP_ADDRESS_RFRECEIVER, SNAP_NO_ACK);
-    snapMaster.sendDataByte('?');
-    snapMaster.sendMessage();
-    // snapMaster.waitForAck();
-
-    uint16_t duration = millis();
-    while (!snapMaster.receivePacket() && millis() - duration < 20) ;
-    if (snapMaster.receivePacket()) {
-      duration = millis() - duration;
-      Serial.print("SNAP response \"");
-      Serial.print(snapMaster.getInt(0), BIN);
-      Serial.print("\" received in ");
-      Serial.print("SNAP response received in ");
-      Serial.print(duration);
-      Serial.println("ms");
-      snapMaster.releaseReceive();
-    } else {
-      Serial.println("no response");
-    }
   }
 } // testCommand
-
-void actionDimmer1(byte power1, byte power2) {
-  snapMaster.waitForAck();
-  snapMaster.sendStart(SNAP_ADDRESS_DIMMER1, SNAP_ACK_WAIT_TIME);
-  snapMaster.sendDataByte('L');
-  snapMaster.sendDataByte(power1);
-  snapMaster.sendDataByte(power2);
-  snapMaster.sendMessage();
-}

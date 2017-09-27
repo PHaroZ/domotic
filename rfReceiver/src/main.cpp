@@ -23,7 +23,8 @@ const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
 // const uint8_t PIN_RS485_TX         = 4;
 const uint8_t PIN_RS485_TX_CONTROL = 6;
 
-const uint8_t PIN_RF_RX_CONTROL = 9;
+const uint8_t PIN_CONTROL_RF_RX    = 8;
+const uint8_t PIN_CONTROL_RF_SAVED = 9;
 
 ButtonKeyType rfButtonValues[] = {
   3544968, // remote1 buttonA
@@ -38,7 +39,8 @@ SNAP<16> snap = SNAP<16>(&snapChannel, SNAP_ADDRESS_RFRECEIVER, PIN_RS485_TX_CON
 
 RCSwitch rcSwitch = RCSwitch();
 
-KeyedButtonMapper<ButtonStateType, ButtonKeyType> keyedButtonMapper;
+KeyedButtonMapper<ButtonStateType,
+  ButtonKeyType> keyedButtonMapper = KeyedButtonMapper<ButtonStateType, ButtonKeyType>(500);
 
 void setup() {
   snap.begin(SNAP_SPEED);
@@ -48,7 +50,8 @@ void setup() {
 
   rcSwitch.enableReceive(0); // Receiver on interrupt 0 => that is pin #2
 
-  pinMode(PIN_RF_RX_CONTROL, OUTPUT);
+  pinMode(PIN_CONTROL_RF_RX, OUTPUT);
+  pinMode(PIN_CONTROL_RF_SAVED, OUTPUT);
 
   keyedButtonMapper.begin(rfButtonValues, sizeof(rfButtonValues) / sizeof(ButtonKeyType));
 }
@@ -61,8 +64,10 @@ void loop() {
 void processRcSwitch() {
   if (rcSwitch.available() && 1 == rcSwitch.getReceivedProtocol() && 24 == rcSwitch.getReceivedBitlength()) {
     ButtonKeyType buttonKeyPressed = rcSwitch.getReceivedValue();
+    // save pressed button index & power the control LED if this push is valid
+    digitalWrite(PIN_CONTROL_RF_RX, HIGH);
     if (keyedButtonMapper.setHighStateFor(buttonKeyPressed)) {
-      digitalWrite(PIN_RF_RX_CONTROL, HIGH);
+      digitalWrite(PIN_CONTROL_RF_SAVED, HIGH);
     }
     rcSwitch.resetAvailable();
   }
@@ -77,10 +82,12 @@ void processSnap() {
         snap.sendStart(SNAP_ADDRESS_MASTER, 0);
         {
           ButtonStateType buttonStates = keyedButtonMapper.readStates();
-          // use of "sendDataInt" depends on type of ButtonStateType
-          snap.sendDataInt(buttonStates);
+          // use of "highByte/lowByte" depends on type of ButtonStateType
+          snap.sendDataByte(highByte(buttonStates));
+          snap.sendDataByte(lowByte(buttonStates));
+          digitalWrite(PIN_CONTROL_RF_RX, LOW);
           if (buttonStates) {
-            digitalWrite(PIN_RF_RX_CONTROL, LOW);
+            digitalWrite(PIN_CONTROL_RF_SAVED, LOW);
           }
           keyedButtonMapper.resetStates();
         }
