@@ -150,30 +150,50 @@ public:
     digitalWrite(COIL_OE, LOW);
   }
 
+  /**
+   * commit/apply state changes previously requested to coils.
+   * verify if some shutters should be stop or start (according to previous commited orders)
+   */
   bool process() {
     this->shutterCheckAll();
     return this->writeCoils();
   }
 
+  /**
+   * return the current closing percent of a shutter, even it's currently moving
+   */
   inline uint8_t shutterGetClosingPercent(uint8_t id) {
     return this->shutterStates[id].closingPercent;
   }
 
+  /**
+   * set the closing percent for a shutter
+   */
   inline void shutterSetClosingPercent(uint8_t id, uint8_t closingPercent) {
     this->shutterSetState(id, closingPercent);
   }
 
+  /**
+   * stop the move of a shutter
+   */
   inline void shutterStop(uint8_t id) {
     this->shutterSetClosingPercent(id, this->shutterGetClosingPercent(id));
   }
 
+  /**
+   * launch closing of ALL shutters
+   */
   void shutterCloseAll() {
     for (uint8_t id; id < this->noShutter; id++) {
       this->shutterSetClosingPercent(id, 100);
     }
   }
 
-  void shutterSwith(uint8_t id) {
+  /**
+   * swap state : if shutter is currenlty moving, stop it ;
+   * else if its last move is for closing, open it ; else close it.
+   */
+  void shutterSwapState(uint8_t id) {
     if (id < this->noShutter) {
       ShutterState& shutterState = this->shutterStates[id];
 
@@ -191,7 +211,10 @@ public:
     }
   }
 
-  bool binarySwitch(uint8_t id) {
+  /**
+   * swap state beetween ON or OFF
+   */
+  bool binarySwapState(uint8_t id) {
     uint8_t coilIndex = this->getBinaryCoilIndex(id);
     bool state        = !this->getCoilState(coilIndex);
 

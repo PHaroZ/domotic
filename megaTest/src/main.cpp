@@ -4,38 +4,33 @@
 #include "main.h"
 
 #include "RemoteDeviceManager.h"
+#include "SwitchManager.h"
 
 #include "SPI.h"
 #include "Debouncer.h"
 #include "CoilManager.h"
 
-RemoteDeviceManager removeDeviceManager;
-RemoteDevice remoteDevices[RemoteDeviceIndex::count] = {
-  RemoteDevice(SNAP_ADDRESS_RFRECEIVER, 20, 100, onRfReceive),
-};
+RemoteDeviceManager remoteDeviceManager;
+RemoteDevice remoteDeviceRfReceiver      = RemoteDevice(SNAP_ADDRESS_RFRECEIVER, 20, 100, onRfReceive);
+RemoteDeviceActuator remoteDeviceDimmer1 = RemoteDeviceActuator(SNAP_ADDRESS_DIMMER1);
+#define noRemoteDevices 2
+RemoteDevice remoteDevices[noRemoteDevices] = { remoteDeviceRfReceiver, remoteDeviceDimmer1 };
 
-Debouncer<16> rfDebouncer;
-Debouncer<32> switchDebouncer;
+SwitchManager<SwitchStatesType> switchManager = SwitchManager<SwitchStatesType>(onSwitchChange);
+
 CoilManager coilManager;
 
 void setup() {
   Serial.begin(115200);
 
-  removeDeviceManager.begin(remoteDevices);
-
   SPI.begin();
-  { // config for ShiftIn read
-    pinMode(SPI_SS_SWITCH, OUTPUT);
-    digitalWrite(SPI_SS_SWITCH, HIGH);
-  }
-  rfDebouncer.begin(LOW);
-  switchDebouncer.begin(HIGH);
+
+  remoteDeviceManager.begin(remoteDevices, noRemoteDevices);
+  switchManager.begin(((uint32_t) 0) - 1);
   coilManager.begin();
 }
 
 void loop() {
-  removeDeviceManager.process();
-
   if (Serial.available() > 0) {
     long startAt = millis();
     byte data[16];
@@ -54,58 +49,47 @@ void loop() {
     testCommand(data);
   }
 
-  {
-    if (switchDebouncer.debounce(getShiftInData(2))) {
-      for (uint8_t i = 0; i < switchDebouncer.getDataWidth(); i++) {
-        if (!switchDebouncer.state(i)) {
-          coilManager.binarySwitch(i);
-        }
-      }
-    }
-  }
+
+  remoteDeviceManager.process();
+
+  switchManager.process();
 
   coilManager.process();
 
   // debugCpuSpeed(10000);
 } // loop
 
-uint32_t getShiftInData(uint8_t size) {
-  // see https://www.gammon.com.au/forum/?id=11979 for more details
-  uint32_t shiftInData = 0 - 1;
-
-  SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-  digitalWrite(SPI_SS_SWITCH, LOW);
-  digitalWrite(SPI_SS_SWITCH, HIGH);
-  // uint32_t shiftInData = (SPI.transfer(0) & 0xFF);
-  // shiftInData |= (SPI.transfer(0) & 0xFF) << 8;
-  SPI.transfer(&shiftInData, size);
-  SPI.endTransaction();
-  return shiftInData;
-}
-
 void onRfReceive(uint8_t * data, size_t size) {
-  uint16_t value = data[0] << 8 | data[1];
+  { // the first two bytes correspond to 16 rf switches, each of then is mapped to a shutter
+    uint16_t value = data[0] << 8 | data[1];
 
-  if (value != 0) {
-    Serial.print("SNAP response from rfReceiver \"");
-    Serial.print(value, BIN);
-    Serial.println("\"");
-    for (size_t i = 0; i < 16; i++) {
-      if (bitRead(value, i)) {
-        coilManager.shutterSwith(i);
+    if (value != 0) {
+      Serial.print("SNAP response from rfReceiver \"");
+      Serial.print(value, BIN);
+      Serial.println("\"");
+      for (size_t i = 0; i < 16; i++) {
+        if (bitRead(value, i)) {
+          coilManager.shutterSwapState(i);
+        }
       }
     }
   }
 }
 
+void onSwitchChange(SwitchStatesType states) {
+  // each bit corresponds to the state of a switch which should be mapped to a binary coil
+  // when a switch is pressed (LOW state) swap the state of a binary coil
+  for (uint8_t i = 0; i < sizeof(SwitchStatesType); i++) {
+    if (!bitRead(states, i)) {
+      coilManager.binarySwapState(i);
+    }
+  }
+}
+
 void actionDimmer1(byte power1, byte power2) {
-  SNAP<16> snap = removeDeviceManager.getSnap();
-  snap.waitForAck();
-  snap.sendStart(SNAP_ADDRESS_DIMMER1, SNAP_ACK_WAIT_TIME);
-  snap.sendDataByte('L');
-  snap.sendDataByte(power1);
-  snap.sendDataByte(power2);
-  snap.sendMessage();
+  uint8_t payload[] = { 'L', power1, power2 };
+
+  remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
 }
 
 void debugCpuSpeed(uint16_t noLoop) {
@@ -129,6 +113,6 @@ void testCommand(const byte * commands) {
   } else if (0x2 == commands[0]) {
     coilManager.shutterSetClosingPercent(commands[1], commands[2]);
   } else if (0x3 == commands[0]) {
-    coilManager.binarySwitch(commands[1]);
+    coilManager.binarySwapState(commands[1]);
   }
 } // testCommand

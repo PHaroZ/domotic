@@ -4,11 +4,6 @@
 #include "SNAP.h"
 #include "SNAPChannelHardwareSerial.h"
 
-enum RemoteDeviceIndex {
-  RfReceiver,
-  count // should always be the last
-};
-
 class RemoteDevice {
 public:
   const uint8_t address;
@@ -16,44 +11,115 @@ public:
   const uint32_t delayBetweenQuery;
   void (* receiveCallback)(uint8_t *, size_t);
   uint32_t lastQueryTime;
-  RemoteDevice(uint8_t address, uint32_t delayForResponse,
+
+  explicit RemoteDevice(uint8_t address, uint32_t delayForResponse,
     uint32_t delayBetweenQuery,
     void(*receiveCallback)(uint8_t *, size_t)) : address(address), delayForResponse(delayForResponse),
     delayBetweenQuery(delayBetweenQuery), receiveCallback(receiveCallback) { }
+
+  bool hasOutgoingPayload() {
+    return false;
+  }
+
+  uint8_t readOutgoingPayload(size_t index) {
+    return 0x00;
+  }
+
+  size_t getOutgoingPayloadSize() {
+    return 0;
+  }
+
+  void clearOutgoingPayload() {
+    // nothing to do
+  }
+};
+
+/**
+ * remote device for which we can send data. Max data size is 16 bytes
+ */
+class RemoteDeviceActuator : public RemoteDevice {
+private:
+  // when it's >0 this means that a message should be send sooner as possible
+  // with a payload corresponding to the first <code>outgoingPayloadSize</code> bytes of <code>outgoingPayloadBuffer</code>
+  size_t outgoingPayloadSize        = 0;
+  uint8_t outgoingPayloadBuffer[16] = { };
+public:
+  using RemoteDevice::RemoteDevice;
+  explicit RemoteDeviceActuator(uint8_t address) : RemoteDevice(address, 0, 0, NULL) { }
+
+  void setOutgoingPayload(uint8_t * payload, size_t size) {
+    this->outgoingPayloadSize = size;
+    for (size_t i = 0; i < size; i++) {
+      this->outgoingPayloadBuffer[i] = payload[i];
+    }
+  }
+
+  bool hasOutgoingPayload() {
+    return this->outgoingPayloadSize > 0;
+  }
+
+  uint8_t readOutgoingPayload(size_t index) {
+    return this->outgoingPayloadBuffer[index];
+  }
+
+  size_t getOutgoingPayloadSize() {
+    return this->outgoingPayloadSize;
+  }
+
+  void clearOutgoingPayload() {
+    this->outgoingPayloadSize = 0;
+  }
 };
 
 class RemoteDeviceManager {
 private:
   SNAPChannelHardwareSerial snapChannel = SNAPChannelHardwareSerial(RS485_SERIAL);
   SNAP<16> snap = SNAP<16>(&snapChannel, SNAP_ADDRESS_MASTER, RS485_PIN_TX_CONTROL);
-  uint8_t incommingMessageBuffer[16];
-
+  uint8_t incommingPayloadBuffer[16];
+  size_t noDevice;
   RemoteDevice * devices;
+  bool waitingForResponse;
+  RemoteDevice * currentQueryDevice = NULL;
+
   inline RemoteDevice * getDevice(uint8_t index) {
     // return (RemoteDevice *) (this->devices + (index - 1));
     return &(this->devices[index]);
   }
 
   uint8_t getDeviceIndexFromAddress(uint8_t address) {
-    for (uint8_t devinceIndex = 0; devinceIndex < RemoteDeviceIndex::count; devinceIndex++) {
+    for (uint8_t devinceIndex = 0; devinceIndex < this->noDevice; devinceIndex++) {
       if (this->getDevice(devinceIndex)->address == address) {
         return devinceIndex;
       }
     }
-    return RemoteDeviceIndex::count;
+    return this->noDevice;
   }
 
-  RemoteDevice * currentQueryDevice = NULL;
+  void processOutgoingMessage() {
+    if (this->queryIsFree()) {
+      for (uint8_t devinceIndex = 0; devinceIndex < this->noDevice; devinceIndex++) {
+        RemoteDevice * device = this->getDevice(devinceIndex);
+        if (device->hasOutgoingPayload()) {
+          this->queryPrepare(device, false);
+          for (size_t i = 0; i < device->getOutgoingPayloadSize(); i++) {
+            this->snap.sendDataByte(device->readOutgoingPayload(i));
+          }
+          this->querySend();
+          return;
+        }
+      }
+    }
+  }
 
   void processIncommingMessage() {
     while (this->snap.receivePacket()) {
       uint8_t receivedFromIndex = this->getDeviceIndexFromAddress(snap.getSource());
-      if (receivedFromIndex < RemoteDeviceIndex::count) {
+      if (receivedFromIndex < this->noDevice) {
         RemoteDevice * device = this->getDevice(receivedFromIndex);
         void (* receiveCallback)(uint8_t *, size_t) = device->receiveCallback;
         if (NULL != receiveCallback) {
-          size_t messageSize = this->snap.readBytes(this->incommingMessageBuffer, 16);
-          receiveCallback(this->incommingMessageBuffer, messageSize);
+          size_t payloadSize = this->snap.readBytes(this->incommingPayloadBuffer, 16);
+          receiveCallback(this->incommingPayloadBuffer, payloadSize);
         }
       } else {
         Serial.print("receive message from unknown source ");
@@ -61,7 +127,7 @@ private:
       }
 
       // response receive from lastQuery ?
-      if (this->snap.getSource() == this->currentQueryDevice->address) {
+      if (this->waitingForResponse && this->snap.getSource() == this->currentQueryDevice->address) {
         // yes it is, clear lastQuery infos
         this->setCurrentQueryDevice(NULL);
       }
@@ -70,16 +136,19 @@ private:
     }
   }
 
-  void setCurrentQueryDevice(RemoteDevice * device) {
+  void setCurrentQueryDevice(RemoteDevice * device, bool waitingForResponse = false) {
     if (NULL != device) {
-      device->lastQueryTime = millis();
+      device->lastQueryTime    = millis();
+      this->waitingForResponse = waitingForResponse;
+    } else {
+      this->waitingForResponse = false;
     }
     this->currentQueryDevice = device;
   }
 
   bool isWaitingForResponse() {
     // response is waiting ?
-    if (NULL != this->currentQueryDevice) {
+    if (this->waitingForResponse) {
       // yes
       // do we wait for too long ?
       if (millis() - this->currentQueryDevice->lastQueryTime > this->currentQueryDevice->delayForResponse) {
@@ -98,12 +167,12 @@ private:
     return !this->isWaitingForResponse() && !this->snap.isWaitingForAck();
   }
 
-  bool queryPrepare(RemoteDevice * device) {
+  bool queryPrepare(RemoteDevice * device, bool waitingForResponse = false) {
     // if (!this->queryIsFree()) {
     //   return false;
     // } else {
-    this->setCurrentQueryDevice(device);
-    this->snap.sendStart(device->address, SNAP_NO_ACK);
+    this->setCurrentQueryDevice(device, waitingForResponse);
+    this->snap.sendStart(device->address, waitingForResponse ? SNAP_NO_ACK : SNAP_ACK_WAIT_TIME);
     return true;
     // }
   }
@@ -114,10 +183,10 @@ private:
 
   void queryNextDevice() {
     if (this->queryIsFree()) {
-      for (uint8_t devinceIndex = 0; devinceIndex < RemoteDeviceIndex::count; devinceIndex++) {
+      for (uint8_t devinceIndex = 0; devinceIndex < this->noDevice; devinceIndex++) {
         RemoteDevice * device = this->getDevice(devinceIndex);
-        if (millis() - device->lastQueryTime > device->delayBetweenQuery) {
-          this->queryPrepare(device);
+        if ((device->delayBetweenQuery > 0) && (millis() - device->lastQueryTime > device->delayBetweenQuery)) {
+          this->queryPrepare(device, true);
           this->snap.sendDataByte('?');
           this->querySend();
           break;
@@ -129,19 +198,21 @@ private:
 public:
   RemoteDeviceManager() { }
 
-  void begin(RemoteDevice * devices) {
-    this->devices = devices;
+  void begin(RemoteDevice * devices, size_t noDevice) {
+    this->noDevice = noDevice;
+    this->devices  = devices;
 
     this->snap.begin(SNAP_SPEED);
     this->snap.setPinRxDebug(LED_BUILTIN);
   }
 
-  SNAP<16>& getSnap() { // TODO remove this method
-    return this->snap;
-  }
-
+  /**
+   * read response from remote device & query data from new device if necessary
+   * if some data are received from a device, corresponding <code>receiveCallback</code> is called
+   */
   void process() {
     this->processIncommingMessage();
+    this->processOutgoingMessage();
     this->queryNextDevice();
   }
 };
