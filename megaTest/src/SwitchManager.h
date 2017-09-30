@@ -4,12 +4,12 @@
 #include "SPI.h"
 #include "Debouncer.h"
 
-template <typename DataType>
+template <size_t noShiftIn, typename DataType>
 class SwitchManager {
 private:
   // represents last read states from SPI, not debounced
   DataType states;
-  _Debouncer<sizeof(DataType), DataType> debouncer;
+  _Debouncer<sizeof(DataType) *8, DataType> debouncer;
   void (* changeCallback)(DataType);
 
   void loadStatesFromSpi() {
@@ -17,7 +17,7 @@ private:
     SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
     digitalWrite(SPI_SS_SWITCH, LOW);
     digitalWrite(SPI_SS_SWITCH, HIGH);
-    SPI.transfer(&this->states, sizeof(DataType));
+    SPI.transfer(&this->states, noShiftIn);
     SPI.endTransaction();
   }
 

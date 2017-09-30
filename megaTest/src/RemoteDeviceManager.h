@@ -112,18 +112,21 @@ private:
   }
 
   void processIncommingMessage() {
-    while (this->snap.receivePacket()) {
+    while (this->snap.checkForPacket()) {
       uint8_t receivedFromIndex = this->getDeviceIndexFromAddress(snap.getSource());
       if (receivedFromIndex < this->noDevice) {
         RemoteDevice * device = this->getDevice(receivedFromIndex);
         void (* receiveCallback)(uint8_t *, size_t) = device->receiveCallback;
         if (NULL != receiveCallback) {
           size_t payloadSize = this->snap.readBytes(this->incommingPayloadBuffer, 16);
+          // Serial.print(millis());
+          // Serial.print("receive message from ");
+          // Serial.println(this->snap.getSource());
           receiveCallback(this->incommingPayloadBuffer, payloadSize);
         }
-      } else {
-        Serial.print("receive message from unknown source ");
-        Serial.println(this->snap.getSource());
+        // } else {
+        //   Serial.print("receive message from unknown source ");
+        //   Serial.println(this->snap.getSource());
       }
 
       // response receive from lastQuery ?
@@ -186,6 +189,9 @@ private:
       for (uint8_t devinceIndex = 0; devinceIndex < this->noDevice; devinceIndex++) {
         RemoteDevice * device = this->getDevice(devinceIndex);
         if ((device->delayBetweenQuery > 0) && (millis() - device->lastQueryTime > device->delayBetweenQuery)) {
+          Serial.print(millis());
+          Serial.print("query device ");
+          Serial.println(device->address);
           this->queryPrepare(device, true);
           this->snap.sendDataByte('?');
           this->querySend();
@@ -207,8 +213,12 @@ public:
   }
 
   /**
-   * read response from remote device & query data from new device if necessary
-   * if some data are received from a device, corresponding <code>receiveCallback</code> is called
+   * in order :
+   * - check SNAP ACK reception
+   * - read response from remote device. If some data are received from a device,
+   *    corresponding <code>receiveCallback</code> is called
+   * - send waiting outgoint message
+   * - query data from new device if necessary
    */
   void process() {
     this->processIncommingMessage();

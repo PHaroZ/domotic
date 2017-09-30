@@ -10,6 +10,7 @@
 #include "SNAP.cpp" // required, because of https://www.codeproject.com/Articles/48575/How-to-define-a-template-class-in-a-h-file-and-imp
 #include "SNAPChannelSoftwareSerial.h"
 
+const int32_t SNAP_SPEED         = 57600;
 const int16_t SNAP_ACK_WAIT_TIME = 10;
 const int16_t SNAP_NO_ACK        = 0;
 const byte SNAP_ADDRESS_MASTER   = 1;
@@ -29,45 +30,60 @@ const byte RELAY_OFF = 1;
 SNAPChannelSoftwareSerial snapChannel = SNAPChannelSoftwareSerial(PIN_RS485_RX, PIN_RS485_TX);
 SNAP<16> snap = SNAP<16>(&snapChannel, SNAP_ADDRESS_DIMMER1, PIN_RS485_TX_CONTROL);
 
-int noLoop = 0;
+#define noActuator 2
+byte pinGates[noActuator] = { 3, 9 };
+uint8_t powerLvls[noActuator] = { 0, 0 };
 
 void setup() {
-  snapMaster.begin(SNAP_SPEED);
+  snap.begin(SNAP_SPEED);
 
-  pinMode(PIN_GATE1, OUTPUT);
-  pinMode(PIN_GATE2, OUTPUT);
+  for (size_t i = 0; i < noActuator; i++) {
+    pinMode(pinGates[i], OUTPUT);
+  }
 
   toggleRelay(false); // order matters
   pinMode(PIN_RELAY, OUTPUT);
 }
 
 void loop() {
-  if (snap.receivePacket()) {
+  if (snap.checkForPacket()) {
     byte receivedCommand = snap.getByte(0);
     // Serial.println("received from master " + String(receivedCommand, HEX));
 
     if (receivedCommand == 'L') {
-      byte powerByte1 = snap.getByte(1);
-      byte powerByte2 = snap.getByte(2);
-      // Serial.println("received from master powerByte "
-      //   + String(powerByte1, HEX) + ", " + String(powerByte2, HEX));
-      powerLight(powerByte1, powerByte2);
+      uint8_t index    = snap.getByte(1);
+      uint8_t powerLvl = snap.getByte(2);
+      powerLight(index, powerLvl);
+    } else if (receivedCommand == 'S') {
+      uint8_t index    = snap.getByte(1);
+      uint8_t powerLvl = powerLvls[index] ? 0 : 255;
+      powerLight(index, powerLvl);
     }
 
     snap.releaseReceive();
   }
 } // loop
 
-void powerLight(byte power1, byte power2) {
-  toggleRelay(power1 > 0 || power2 > 0);
+void powerLight(uint8_t index, uint8_t powerLvl) {
+  powerLvls[index] = powerLvl;
+
+  bool powerRequired = false;
+  for (size_t i = 0; i < noActuator; i++) {
+    if (powerLvls[i]) {
+      powerRequired = true;
+      break;
+    }
+  }
+
+  toggleRelay(powerRequired);
+
   // try to use fade effect
   //  int periode = 2000;
   // time = millis();
   // value = 128+127*cos(2*PI/periode*time);
   // analogWrite(ledpin, value);
 
-  analogWrite(PIN_GATE1, power1);
-  analogWrite(PIN_GATE2, power2);
+  analogWrite(pinGates[index], powerLvl);
 }
 
 void toggleRelay(bool on) {

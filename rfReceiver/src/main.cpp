@@ -46,8 +46,6 @@ void setup() {
   snap.begin(SNAP_SPEED);
   snap.setPinRxDebug(LED_BUILTIN);
 
-  Serial.println("setup");
-
   rcSwitch.enableReceive(0); // Receiver on interrupt 0 => that is pin #2
 
   pinMode(PIN_CONTROL_RF_RX, OUTPUT);
@@ -74,12 +72,12 @@ void processRcSwitch() {
 }
 
 void processSnap() {
-  if (snap.receivePacket()) {
+  if (snap.checkForPacket()) {
     byte receivedCommand = snap.getByte(0);
     if (receivedCommand == '?') { // state requested
       snap.releaseReceive();
       { // send response
-        snap.sendStart(SNAP_ADDRESS_MASTER, 0);
+        snap.sendStart(SNAP_ADDRESS_MASTER, SNAP_NO_ACK);
         {
           ButtonStateType buttonStates = keyedButtonMapper.readStates();
           // use of "highByte/lowByte" depends on type of ButtonStateType

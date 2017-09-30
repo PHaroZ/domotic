@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+#include "Orchestrator.h"
+
 #include "RemoteDeviceManager.h"
 #include "SwitchManager.h"
 
@@ -16,13 +18,12 @@ RemoteDeviceActuator remoteDeviceDimmer1 = RemoteDeviceActuator(SNAP_ADDRESS_DIM
 #define noRemoteDevices 2
 RemoteDevice remoteDevices[noRemoteDevices] = { remoteDeviceRfReceiver, remoteDeviceDimmer1 };
 
-SwitchManager<SwitchStatesType> switchManager = SwitchManager<SwitchStatesType>(onSwitchChange);
+SwitchManager<2, SwitchStatesType> switchManager = SwitchManager<2, SwitchStatesType>(onSwitchChange);
 
 CoilManager coilManager;
 
 void setup() {
   Serial.begin(115200);
-
   SPI.begin();
 
   remoteDeviceManager.begin(remoteDevices, noRemoteDevices);
@@ -79,15 +80,27 @@ void onRfReceive(uint8_t * data, size_t size) {
 void onSwitchChange(SwitchStatesType states) {
   // each bit corresponds to the state of a switch which should be mapped to a binary coil
   // when a switch is pressed (LOW state) swap the state of a binary coil
-  for (uint8_t i = 0; i < sizeof(SwitchStatesType); i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (!bitRead(states, i)) {
       coilManager.binarySwapState(i);
     }
   }
+
+  if (bitRead(states, 16)) {
+    actionDimmer1Swap(0);
+  } else if (bitRead(states, 17)) {
+    actionDimmer1Swap(1);
+  }
 }
 
-void actionDimmer1(byte power1, byte power2) {
-  uint8_t payload[] = { 'L', power1, power2 };
+void actionDimmer1Set(uint8_t index, uint8_t powerLvl) {
+  uint8_t payload[] = { 'L', index, powerLvl };
+
+  remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
+}
+
+void actionDimmer1Swap(uint8_t index) {
+  uint8_t payload[] = { 'S', index };
 
   remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
 }
@@ -108,11 +121,13 @@ void debugCpuSpeed(uint16_t noLoop) {
 
 void testCommand(const byte * commands) {
   // use cutecom to debug and send hex data
-  if (0x1 == commands[0]) {
-    actionDimmer1(commands[1], commands[2]);
-  } else if (0x2 == commands[0]) {
+  if (0x01 == commands[0]) {
+    actionDimmer1Set(commands[1], commands[2]);
+  } else if (0x02 == commands[0]) {
+    actionDimmer1Swap(commands[1]);
+  } else if (0x20 == commands[0]) {
     coilManager.shutterSetClosingPercent(commands[1], commands[2]);
-  } else if (0x3 == commands[0]) {
+  } else if (0x30 == commands[0]) {
     coilManager.binarySwapState(commands[1]);
   }
 } // testCommand
