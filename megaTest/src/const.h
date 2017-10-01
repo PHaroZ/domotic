@@ -10,7 +10,12 @@ const uint8_t SNAP_ADDRESS_MASTER     = 1;
 const uint8_t SNAP_ADDRESS_DIMMER1    = 2;
 const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
 const uint8_t RS485_PIN_TX_CONTROL    = 24;
-HardwareSerial * RS485_SERIAL         = &Serial3;
+
+// HardwareSerial * RS485_SERIAL = &Serial3;
+#define RS485_SERIAL &Serial3
+
+// number of 75HC165N connected
+const uint8_t NO_SHIFT_IN_PIC = 2;
 
 const bool COIL_ON       = LOW;
 const bool COIL_OFF      = HIGH;
