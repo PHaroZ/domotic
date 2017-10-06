@@ -26,4 +26,11 @@ const uint8_t COIL_OE    = 41;
 
 const uint8_t SPI_SS_SWITCH = 8;
 
+// MySensors config
+#define MY_GATEWAY_SERIAL
+// #define MY_CORE_ONLY
+// #define MY_SERIALDEVICE Serial2
+#define MY_DEBUG
+
+
 #endif // ifndef const_h

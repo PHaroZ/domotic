@@ -1,29 +1,45 @@
 #include "Arduino.h"
 #include "const.h"
+#include "core/MyMessage.h"
 
 #include "sub/RemoteDeviceManager.h"
 #include "sub/SwitchManager.h"
 #include "sub/CoilManager.h"
 
-#define noRemoteDevices 2
+#define noRemoteDevice 2
+#define noShutter      3
+#define noBinary       2
+#define noSwitch       16
 using SwitchStatesType = uint32_t;
+
+namespace {
+struct Sensor {
+  const uint8_t childSensorId;
+  const uint8_t sensorType;
+};
+}
 
 class Orchestrator {
 private:
   static RemoteDeviceManager remoteDeviceManager;
   static RemoteDevice remoteDeviceRfReceiver;
   static RemoteDeviceActuator remoteDeviceDimmer1;
-  static RemoteDevice remoteDevices[noRemoteDevices];
+  static RemoteDevice remoteDevices[noRemoteDevice];
+  static Shutter shutters[noShutter];
   static SwitchManager<SwitchStatesType> switchManager;
   static CoilManager<uint32_t> coilManager;
 
+  static void presentSensor(Sensor * pres, const char * desc = NULL);
+  static void presentSensors(uint8_t type, uint8_t no, uint8_t sensorStartIndex, const char * descTpl);
   static void onRfReceive(uint8_t * data, size_t size);
   static void onSwitchChange(SwitchStatesType states);
 public:
   Orchestrator() { }
 
   static void begin();
+  static void presentation();
   static void process();
+  static void receive(const MyMessage &message);
   static void actionDimmer1Set(uint8_t id, uint8_t powerLvl);
   static void actionDimmer1Swap(uint8_t id);
   static void actionBinarySwapState(uint8_t id);

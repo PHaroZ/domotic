@@ -3,22 +3,14 @@
 
 #include "CoilManagerUtils.h"
 
-namespace {
-ShutterPowerGroup shutterPowerGroupVelux = ShutterPowerGroup(2000, 1);
-ShutterPowerGroup shutterPowerGroupAC    = ShutterPowerGroup(2000, 5);
-}
-
 template <typename DataType>
 class CoilManager {
 private:
-  DataType state                = 1;
-  DataType nextState            = 0;
-  const uint8_t noShutter       = 3;
-  ShutterState shutterStates[3] = {
-    ShutterState(shutterPowerGroupVelux, 10000),
-    ShutterState(shutterPowerGroupVelux, 30000),
-    ShutterState(shutterPowerGroupAC,    10000),
-  };
+  DataType state     = 1;
+  DataType nextState = 0;
+  uint8_t noBinary;
+  uint8_t noShutter;
+  Shutter * shutterStates;
   const size_t dataTypeSize = sizeof(DataType) * 8;
 
   inline boolean getNextState(uint8_t id) { return bitRead(this->nextState, id); }
@@ -39,13 +31,17 @@ private:
 public:
   CoilManager()  {  }
 
-  void begin();
+  void begin(Shutter * shutters, size_t noShutter, size_t noBinary);
 
   /**
    * commit/apply state changes previously requested to coils.
    * verify if some shutters should be stop or start (according to previous commited orders)
    */
   bool process();
+
+  inline uint8_t getNoBinary() { return this->noBinary; }
+
+  inline uint8_t getNoShutter() { return this->noShutter; }
 
   /**
    * return the current closing percent of a shutter, even it's currently moving

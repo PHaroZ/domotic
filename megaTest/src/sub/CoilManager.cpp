@@ -31,7 +31,7 @@ template <typename DataType> bool CoilManager<DataType>::getCoilState(uint8_t id
 }
 
 template <typename DataType> void CoilManager<DataType>::shutterSetState(uint8_t id, uint8_t closingPercent) {
-  ShutterState& shutterState = shutterStates[id];
+  Shutter& shutterState = shutterStates[id];
 
   if (shutterState.startMovingAt) { // it is moving, stop it first
     this->shutterSetStopped(id);
@@ -51,7 +51,7 @@ template <typename DataType> void CoilManager<DataType>::shutterSetState(uint8_t
 } // shutterSetState
 
 template <typename DataType> void CoilManager<DataType>::shutterSetStopped(uint8_t id) {
-  ShutterState& shutterState = shutterStates[id];
+  Shutter& shutterState = shutterStates[id];
 
   shutterState.powerGroup.noSimultaneousMoving--;
   shutterState.closingPercentLast = shutterState.closingPercent;
@@ -66,7 +66,7 @@ template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
   uint32_t now = millis();
 
   for (uint8_t id; id < this->noShutter; id++) {
-    ShutterState& shutterState = this->shutterStates[id];
+    Shutter& shutterState = this->shutterStates[id];
     if (shutterState.startMovingAt) { // it is moving
       // update its state & check if it must be stoppped
       int8_t progressPercent = (now - shutterState.startMovingAt) / 0.01 / shutterState.fullMovingTime;
@@ -112,7 +112,11 @@ template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
   }
 } // shutterCheckAll
 
-template <typename DataType> void CoilManager<DataType>::begin() {
+template <typename DataType> void CoilManager<DataType>::begin(Shutter * shutters, size_t noShutter, size_t noBinary) {
+  this->shutterStates = shutters;
+  this->noShutter     = noShutter;
+  this->noBinary      = noBinary;
+
   pinMode(COIL_DS, OUTPUT);
   pinMode(COIL_ST_CP, OUTPUT);
   pinMode(COIL_SH_CP, OUTPUT);
@@ -140,7 +144,7 @@ template <typename DataType> void CoilManager<DataType>::shutterCloseAll() {
 
 template <typename DataType> void CoilManager<DataType>::shutterSwapState(uint8_t id) {
   if (id < this->noShutter) {
-    ShutterState& shutterState = this->shutterStates[id];
+    Shutter& shutterState = this->shutterStates[id];
 
     Serial.print("shutterSwith ");
     Serial.println(id);

@@ -1,11 +1,11 @@
 #include "Arduino.h"
+#include "SPI.h"
+
 #include "const.h"
-
 #include "main.h"
-
 #include "Orchestrator.h"
 
-#include "SPI.h"
+// #include "MySensors.h"
 
 Orchestrator orchestrator;
 
@@ -14,6 +14,10 @@ void setup() {
   SPI.begin();
 
   orchestrator.begin();
+}
+
+void presentation() {
+  orchestrator.presentation();
 }
 
 void loop() {
@@ -26,7 +30,7 @@ void loop() {
         data[dataIndex++] = Serial.read();
       }
     }
-    Serial.print("testCommand");
+    Serial.print(F("testCommand"));
     for (byte i = 0; i < dataIndex; i++) {
       Serial.print(' ');
       Serial.print(data[i]);
@@ -41,15 +45,19 @@ void loop() {
   // debugCpuSpeed(10000);
 } // loop
 
+void receive(const MyMessage &message) {
+  orchestrator.receive(message);
+}
+
 void debugCpuSpeed(uint16_t noLoop) {
   static uint16_t currentNoLoop    = 0;
   static uint32_t startLoopingTime = 0;
 
   if (currentNoLoop++ == noLoop) {
     Serial.print(noLoop);
-    Serial.print(" loops in");
+    Serial.print(F(" loops in"));
     Serial.print(millis() - startLoopingTime);
-    Serial.println("ms");
+    Serial.println(F("ms"));
     currentNoLoop    = 0;
     startLoopingTime = millis();
   }

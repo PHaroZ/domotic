@@ -22,7 +22,7 @@ public:
   }
 };
 
-class ShutterState {
+class Shutter {
 public:
   ShutterPowerGroup & powerGroup;
   // time required to fully open/close this shutter
@@ -37,8 +37,8 @@ public:
   uint32_t startMovingAt = 0;
   // 1 if last move is for closing, 0 otherwise
   bool lastMoveForClosing = 0;
-  ShutterState(ShutterPowerGroup& powerGroup,
-    uint32_t                    fullMovingTime) : powerGroup(powerGroup), fullMovingTime(fullMovingTime),
+  Shutter(ShutterPowerGroup& powerGroup,
+    uint32_t               fullMovingTime) : powerGroup(powerGroup), fullMovingTime(fullMovingTime),
     closingPercent(0),
     closingPercentDiffRequested(0),
     startMovingAt(0) { }
