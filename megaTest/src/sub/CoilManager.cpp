@@ -160,6 +160,13 @@ template <typename DataType> void CoilManager<DataType>::shutterSwapState(uint8_
   }
 }
 
+template <typename DataType> bool CoilManager<DataType>::binarySetState(uint8_t id, bool state) {
+  uint8_t coilIndex = this->getBinaryCoilIndex(id);
+
+  this->setCoilState(coilIndex, state);
+  return state;
+}
+
 template <typename DataType> bool CoilManager<DataType>::binarySwapState(uint8_t id) {
   uint8_t coilIndex = this->getBinaryCoilIndex(id);
   bool state        = !this->getCoilState(coilIndex);

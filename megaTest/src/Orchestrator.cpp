@@ -2,11 +2,15 @@
 #include "MySensors.h"
 
 namespace {
+Sensor sensorDebug       = { 254, S_CUSTOM };
 Sensor sensorDimmer1Cold = { 1, S_DIMMER };
 Sensor sensorDimmer1Warm = { 2, S_DIMMER };
-const uint8_t sensorStartIndexForShutter = 100;
-const uint8_t sensorStartIndexForBinary  = 115;
-const uint8_t sensorStartIndexForSwitch  = 164;
+const uint8_t sensorIndexStartForShutter = 100;
+const uint8_t sensorIndexEndForShutter   = sensorIndexStartForShutter + noShutter - 1;
+const uint8_t sensorIndexStartForBinary  = 115;
+const uint8_t sensorIndexEndForBinary    = sensorIndexStartForBinary + noBinary - 1;
+const uint8_t sensorIndexStartForSwitch  = 164;
+const uint8_t sensorIndexEndForSwitch    = sensorIndexStartForSwitch + noSwitch - 1;
 }
 
 // RemoteDevice part
@@ -17,6 +21,8 @@ RemoteDevice Orchestrator::remoteDevices[noRemoteDevice] = {
   Orchestrator::remoteDeviceRfReceiver,
   Orchestrator::remoteDeviceDimmer1,
 };
+
+uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
 
 // switch part
 SwitchManager<SwitchStatesType> Orchestrator::switchManager(Orchestrator::onSwitchChange);
@@ -42,14 +48,14 @@ void Orchestrator::begin() {
 void Orchestrator::presentation() {
   {
     char buffer[25]; // 25 is the max size of MySensors description
-
+    presentSensor(&sensorDebug, strcpy_P(buffer, PSTR("DEBUG")));
     presentSensor(&sensorDimmer1Cold, strcpy_P(buffer, PSTR("Salon, dimmer1 froid")));
     presentSensor(&sensorDimmer1Warm, strcpy_P(buffer, PSTR("Salon, dimmer1 chaud")));
   }
 
-  presentSensors(S_COVER, noShutter, sensorStartIndexForShutter, PSTR("Volet %02d"));
-  presentSensors(S_BINARY, noBinary, sensorStartIndexForBinary, PSTR("Relais %02d"));
-  presentSensors(S_BINARY, noSwitch, sensorStartIndexForSwitch, PSTR("Interrupteur %02d"));
+  presentSensors(S_COVER, noShutter, sensorIndexStartForShutter, PSTR("Volet %02d"));
+  presentSensors(S_BINARY, noBinary, sensorIndexStartForBinary, PSTR("Relais %02d"));
+  presentSensors(S_BINARY, noSwitch, sensorIndexStartForSwitch, PSTR("Interrupteur %02d"));
 }
 
 void Orchestrator::process() {
@@ -58,20 +64,69 @@ void Orchestrator::process() {
   Orchestrator::coilManager.process();
 }
 
-void Orchestrator::receive(const MyMessage &message) {
-  // TODO
-}
+void Orchestrator::onMessageReceive(const MyMessage &message) {
+  if (message.sensor == sensorDebug.id) {
+    // incomming data to this device should be send to debug purpose
+    // in "cutecom" program input should be
+    // 0;254;1;0;48;<PAYLOAD>
+    // <PAYLOAD> is composed by :
+    // 1st char specify the command
+    // other for the command payload
+    const char * commands = message.data;
+    const char command    = commands[0];
+    commands += 1;
+    if ('A' == command) {
+      char * pos = strchr(commands, ',');
+      if (pos != NULL) {
+        *pos = '\0';
+        Orchestrator::actionShutterSetClosingPercent(atoi(commands), atoi(pos + 1));
+        return;
+      }
+    } else if ('B' == command) {
+      Orchestrator::actionBinarySwapState(atoi(commands));
+      return;
+    }
+  } else if (message.sensor == sensorDimmer1Cold.id || message.sensor == sensorDimmer1Warm.id) {
+    // dimmer1 command
+    if (message.type == V_STATUS || message.type == V_PERCENTAGE) {
+      uint8_t requestedLevel = atoi(message.data);
+      requestedLevel *= ( message.type == V_STATUS ? 100 : 1 );
+      Orchestrator::actionDimmer1Set(sensorDimmer1Warm.id - 1, requestedLevel);
+      return;
+    }
+  } else if (message.sensor >= sensorIndexStartForShutter && message.sensor <= sensorIndexEndForShutter) {
+    // shutters command
+    if (message.type == V_PERCENTAGE) {
+      uint8_t requestedLevel = atoi(message.data);
+      Orchestrator::actionShutterSetClosingPercent(message.sensor - sensorIndexStartForShutter, requestedLevel);
+      return;
+    }
+  } else if (message.sensor >= sensorIndexStartForBinary && message.sensor <= sensorIndexEndForBinary) {
+    // binary command
+    if (message.type == V_STATUS) {
+      bool requestedLevel = atoi(message.data);
+      Orchestrator::coilManager.binarySetState(message.sensor - sensorIndexStartForBinary, requestedLevel);
+      return;
+    }
+  }
+  Serial.print("Unsupported message : ");
+  Serial.print("sensor=");
+  Serial.print(message.sensor);
+  Serial.print(" type=");
+  Serial.print(message.type);
+  Serial.print(" data=");
+  Serial.println(message.data);
+} // receive
 
 void Orchestrator::actionDimmer1Set(uint8_t id, uint8_t powerLvl) {
   uint8_t payload[] = { 'L', id, powerLvl };
 
   Orchestrator::remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
+  Orchestrator::dimmer1States[id] = powerLvl;
 }
 
 void Orchestrator::actionDimmer1Swap(uint8_t id) {
-  uint8_t payload[] = { 'S', id };
-
-  Orchestrator::remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
+  Orchestrator::actionDimmer1Set(id, Orchestrator::dimmer1States[id] > 0 ? 0 : 100);
 }
 
 void Orchestrator::actionBinarySwapState(uint8_t id) {
@@ -87,11 +142,11 @@ void Orchestrator::actionShutterSetClosingPercent(uint8_t id, uint8_t percent) {
 // *************************************************************************
 
 void Orchestrator::presentSensor(Sensor * sensor, const char * desc) {
-  present(sensor->childSensorId, sensor->sensorType, desc, false);
+  present(sensor->id, sensor->type, desc, false);
 }
 
 void Orchestrator::presentSensors(uint8_t type, uint8_t no, uint8_t sensorStartIndex, const char * descTpl) {
-  char buffer[25]; // 25 is the max size of MySensors description
+  char buffer[26] = { 0 }; // 25 is the max size of MySensors description
 
   for (uint8_t index = 0; index < no; index++) {
     const uint8_t sensorId = sensorStartIndex + index;

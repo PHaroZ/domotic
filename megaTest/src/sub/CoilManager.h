@@ -79,4 +79,9 @@ public:
    * swap state beetween ON or OFF
    */
   bool binarySwapState(uint8_t id);
+
+  /**
+   * set the state of a binary
+   */
+  bool binarySetState(uint8_t id, bool state);
 };
