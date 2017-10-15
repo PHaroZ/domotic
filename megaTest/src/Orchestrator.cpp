@@ -2,9 +2,9 @@
 #include "MySensors.h"
 
 namespace {
-Sensor sensorDebug       = { 254, S_CUSTOM };
-Sensor sensorDimmer1Cold = { 1, S_DIMMER };
-Sensor sensorDimmer1Warm = { 2, S_DIMMER };
+Sensor sensorDebug(254, S_CUSTOM);
+SensorIndexed sensorDimmer1Cold(1, S_DIMMER, 0);
+SensorIndexed sensorDimmer1Warm(2, S_DIMMER, 1);
 const uint8_t sensorIndexStartForShutter = 100;
 const uint8_t sensorIndexEndForShutter   = sensorIndexStartForShutter + noShutter - 1;
 const uint8_t sensorIndexStartForBinary  = 115;
@@ -23,27 +23,22 @@ RemoteDevice Orchestrator::remoteDevices[noRemoteDevice] = {
 };
 
 uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
+MyMessage Orchestrator::myMessage(0, 0);
 
 // switch part
 SwitchManager<SwitchStatesType> Orchestrator::switchManager(Orchestrator::onSwitchChange);
 
 // coil part
-CoilManager<uint32_t> Orchestrator::coilManager;
+CoilManager<uint32_t> Orchestrator::coilManager(Orchestrator::onShutterMoveEnd);
 namespace {
 ShutterPowerGroup shutterPowerGroupVelux = ShutterPowerGroup(2000, 1);
 ShutterPowerGroup shutterPowerGroupAC    = ShutterPowerGroup(2000, 5);
 }
 Shutter Orchestrator::shutters[noShutter] = {
-  Shutter(shutterPowerGroupVelux, 10000),
+  Shutter(shutterPowerGroupVelux,  5000),
   Shutter(shutterPowerGroupVelux, 30000),
   Shutter(shutterPowerGroupAC,    10000),
 };
-
-void Orchestrator::begin() {
-  Orchestrator::remoteDeviceManager.begin(Orchestrator::remoteDevices, noRemoteDevice);
-  Orchestrator::switchManager.begin(~SwitchStatesType(0));
-  coilManager.begin(Orchestrator::shutters, noShutter, noBinary);
-}
 
 void Orchestrator::presentation() {
   {
@@ -58,13 +53,25 @@ void Orchestrator::presentation() {
   presentSensors(S_BINARY, noSwitch, sensorIndexStartForSwitch, PSTR("Interrupteur %02d"));
 }
 
+void Orchestrator::begin() {
+  Orchestrator::remoteDeviceManager.begin(Orchestrator::remoteDevices, noRemoteDevice);
+  Orchestrator::switchManager.begin(~SwitchStatesType(0));
+  coilManager.begin(Orchestrator::shutters, noShutter, noBinary);
+
+  { // force sending current state to MySensors controller
+    Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Cold.actuatorIndex);
+    Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Warm.actuatorIndex);
+    // TODO do the same for shutter & binary
+  }
+}
+
 void Orchestrator::process() {
   Orchestrator::remoteDeviceManager.process();
   Orchestrator::switchManager.process();
   Orchestrator::coilManager.process();
 }
 
-void Orchestrator::onMessageReceive(const MyMessage &message) {
+bool Orchestrator::onMyMessageReceive(const MyMessage &message) {
   if (message.sensor == sensorDebug.id) {
     // incomming data to this device should be send to debug purpose
     // in "cutecom" program input should be
@@ -80,62 +87,45 @@ void Orchestrator::onMessageReceive(const MyMessage &message) {
       if (pos != NULL) {
         *pos = '\0';
         Orchestrator::actionShutterSetClosingPercent(atoi(commands), atoi(pos + 1));
-        return;
+        return true;
       }
     } else if ('B' == command) {
       Orchestrator::actionBinarySwapState(atoi(commands));
-      return;
+      return true;
     }
   } else if (message.sensor == sensorDimmer1Cold.id || message.sensor == sensorDimmer1Warm.id) {
     // dimmer1 command
     if (message.type == V_STATUS || message.type == V_PERCENTAGE) {
       uint8_t requestedLevel = atoi(message.data);
       requestedLevel *= ( message.type == V_STATUS ? 100 : 1 );
-      Orchestrator::actionDimmer1Set(sensorDimmer1Warm.id - 1, requestedLevel);
-      return;
+      SensorIndexed * sensor = NULL;
+      if (message.sensor == sensorDimmer1Cold.id) {
+        sensor = &sensorDimmer1Cold;
+      } else if (message.sensor == sensorDimmer1Warm.id) {
+        sensor = &sensorDimmer1Warm;
+      }
+      if (NULL != sensor) {
+        Orchestrator::actionDimmer1Set(sensor->actuatorIndex, requestedLevel);
+        return true;
+      }
     }
   } else if (message.sensor >= sensorIndexStartForShutter && message.sensor <= sensorIndexEndForShutter) {
     // shutters command
     if (message.type == V_PERCENTAGE) {
-      uint8_t requestedLevel = atoi(message.data);
+      int8_t requestedLevel = atoi(message.data);
       Orchestrator::actionShutterSetClosingPercent(message.sensor - sensorIndexStartForShutter, requestedLevel);
-      return;
+      return true;
     }
   } else if (message.sensor >= sensorIndexStartForBinary && message.sensor <= sensorIndexEndForBinary) {
     // binary command
     if (message.type == V_STATUS) {
       bool requestedLevel = atoi(message.data);
       Orchestrator::coilManager.binarySetState(message.sensor - sensorIndexStartForBinary, requestedLevel);
-      return;
+      return true;
     }
   }
-  Serial.print("Unsupported message : ");
-  Serial.print("sensor=");
-  Serial.print(message.sensor);
-  Serial.print(" type=");
-  Serial.print(message.type);
-  Serial.print(" data=");
-  Serial.println(message.data);
+  return false;
 } // receive
-
-void Orchestrator::actionDimmer1Set(uint8_t id, uint8_t powerLvl) {
-  uint8_t payload[] = { 'L', id, powerLvl };
-
-  Orchestrator::remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
-  Orchestrator::dimmer1States[id] = powerLvl;
-}
-
-void Orchestrator::actionDimmer1Swap(uint8_t id) {
-  Orchestrator::actionDimmer1Set(id, Orchestrator::dimmer1States[id] > 0 ? 0 : 100);
-}
-
-void Orchestrator::actionBinarySwapState(uint8_t id) {
-  Orchestrator::coilManager.binarySwapState(id);
-}
-
-void Orchestrator::actionShutterSetClosingPercent(uint8_t id, uint8_t percent) {
-  Orchestrator::coilManager.shutterSetClosingPercent(id, percent);
-}
 
 // *************************************************************************
 // private methods bellow
@@ -150,7 +140,7 @@ void Orchestrator::presentSensors(uint8_t type, uint8_t no, uint8_t sensorStartI
 
   for (uint8_t index = 0; index < no; index++) {
     const uint8_t sensorId = sensorStartIndex + index;
-    Sensor sensor = { sensorId, type };
+    Sensor sensor(sensorId, type);
     sprintf_P(buffer, descTpl, index + 1);
     Orchestrator::presentSensor(&sensor, buffer);
   }
@@ -161,9 +151,6 @@ void Orchestrator::onRfReceive(uint8_t * data, size_t size) {
     uint16_t value = data[0] << 8 | data[1];
 
     if (value != 0) {
-      Serial.print(F("SNAP response from rfReceiver \""));
-      Serial.print(value, BIN);
-      Serial.println("\"");
       for (size_t i = 0; i < 16; i++) {
         if (bitRead(value, i)) {
           Orchestrator::coilManager.shutterSwapState(i);
@@ -178,13 +165,65 @@ void Orchestrator::onSwitchChange(SwitchStatesType states) {
   // when a switch is pressed (LOW state) swap the state of a binary coil
   for (uint8_t i = 0; i < 16; i++) {
     if (!bitRead(states, i)) {
-      Orchestrator::coilManager.binarySwapState(i);
+      Orchestrator::actionBinarySwapState(i);
     }
   }
 
-  if (bitRead(states, 16)) {
+  if (!bitRead(states, 16)) {
     Orchestrator::actionDimmer1Swap(0);
-  } else if (bitRead(states, 17)) {
+  } else if (!bitRead(states, 17)) {
     Orchestrator::actionDimmer1Swap(1);
   }
+}
+
+void Orchestrator::onShutterMoveEnd(uint8_t id, int8_t percent) {
+  Orchestrator::sendMyMessageForShutter(id);
+}
+
+void Orchestrator::actionDimmer1Set(uint8_t id, uint8_t powerLvl) {
+  uint8_t payload[] = { 'L', id, powerLvl };
+
+  Orchestrator::remoteDeviceDimmer1.setOutgoingPayload(payload, sizeof(payload));
+  Orchestrator::dimmer1States[id] = powerLvl;
+
+  Orchestrator::sendMyMessageForDimmer1(id);
+}
+
+void Orchestrator::actionDimmer1Swap(uint8_t id) {
+  Orchestrator::actionDimmer1Set(id, Orchestrator::dimmer1States[id] > 0 ? 0 : 100);
+}
+
+void Orchestrator::actionBinarySwapState(uint8_t id) {
+  Orchestrator::coilManager.binarySwapState(id);
+  Orchestrator::sendMyMessageForBinary(id);
+}
+
+void Orchestrator::actionShutterSetClosingPercent(uint8_t id, int8_t percent) {
+  Orchestrator::coilManager.shutterSetClosingPercent(id, percent);
+}
+
+void Orchestrator::sendMyMessage(MyMessage &message) {
+  send(message, false);
+}
+
+void Orchestrator::sendMyMessageForDimmer1(uint8_t id) {
+  uint8_t powerLvl       = Orchestrator::dimmer1States[id];
+  SensorIndexed * sensor = NULL;
+
+  if (id == sensorDimmer1Cold.actuatorIndex) {
+    sensor = &sensorDimmer1Cold;
+  } else if (id == sensorDimmer1Warm.actuatorIndex) {
+    sensor = &sensorDimmer1Warm;
+  }
+  Orchestrator::sendMyMessage(Orchestrator::myMessage.setSensor(sensor->id).setType(V_PERCENTAGE).set(powerLvl));
+}
+
+void Orchestrator::sendMyMessageForBinary(uint8_t id) {
+  Orchestrator::sendMyMessage(Orchestrator::myMessage.setSensor(sensorIndexStartForBinary
+      + id).setType(S_BINARY).set(Orchestrator::coilManager.binaryGetState(id)));
+}
+
+void Orchestrator::sendMyMessageForShutter(uint8_t id) {
+  Orchestrator::sendMyMessage(Orchestrator::myMessage.setSensor(sensorIndexStartForShutter
+      + id).setType(V_PERCENTAGE).set(Orchestrator::coilManager.shutterGetClosingPercent(id)));
 }

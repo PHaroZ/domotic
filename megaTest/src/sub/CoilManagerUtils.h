@@ -25,12 +25,12 @@ public:
 class Shutter {
 public:
   ShutterPowerGroup & powerGroup;
-  // time required to fully open/close this shutter
+  // time required to fully open/close this shutter (in tenth of second, not ms, for performance purpose)
   const uint32_t fullMovingTime;
   // percent of closing now
-  uint8_t closingPercent = 0;
+  int8_t closingPercent = 0;
   // percent of closing at the last stable state
-  uint8_t closingPercentLast = 0;
+  int8_t closingPercentLast = 0;
   // requested DIFFERENCE percent of closing (beetwee current value abd expected one)
   int8_t closingPercentDiffRequested = 0;
   // if is moving, when it starts (0 means not moving)
@@ -38,7 +38,7 @@ public:
   // 1 if last move is for closing, 0 otherwise
   bool lastMoveForClosing = 0;
   Shutter(ShutterPowerGroup& powerGroup,
-    uint32_t               fullMovingTime) : powerGroup(powerGroup), fullMovingTime(fullMovingTime),
+    uint32_t               fullMovingTime) : powerGroup(powerGroup), fullMovingTime(fullMovingTime / 100),
     closingPercent(0),
     closingPercentDiffRequested(0),
     startMovingAt(0) { }

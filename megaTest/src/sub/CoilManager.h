@@ -12,6 +12,8 @@ private:
   uint8_t noShutter;
   Shutter * shutterStates;
   const size_t dataTypeSize = sizeof(DataType) * 8;
+  // callback which should be called when shutter stop its move (id, percent)
+  void (* shutterMoveEndCallback)(uint8_t, int8_t);
 
   inline boolean getNextState(uint8_t id) { return bitRead(this->nextState, id); }
 
@@ -24,12 +26,12 @@ private:
   bool writeCoils();
   void setCoilState(uint8_t id, bool state);
   bool getCoilState(uint8_t id);
-  void shutterSetState(uint8_t id, uint8_t closingPercent);
+  void shutterSetState(uint8_t id, int8_t closingPercent);
   void shutterSetStopped(uint8_t id);
   void shutterCheckAll();
 
 public:
-  CoilManager()  {  }
+  CoilManager(void(*shutterMoveEndCallback)(uint8_t, int8_t)) : shutterMoveEndCallback(shutterMoveEndCallback) {  }
 
   void begin(Shutter * shutters, size_t noShutter, size_t noBinary);
 
@@ -46,14 +48,14 @@ public:
   /**
    * return the current closing percent of a shutter, even it's currently moving
    */
-  inline uint8_t shutterGetClosingPercent(uint8_t id) {
+  inline int8_t shutterGetClosingPercent(uint8_t id) {
     return this->shutterStates[id].closingPercent;
   }
 
   /**
    * set the closing percent for a shutter
    */
-  inline void shutterSetClosingPercent(uint8_t id, uint8_t closingPercent) {
+  inline void shutterSetClosingPercent(uint8_t id, int8_t closingPercent) {
     this->shutterSetState(id, closingPercent);
   }
 
@@ -84,4 +86,9 @@ public:
    * set the state of a binary
    */
   bool binarySetState(uint8_t id, bool state);
+
+  /**
+   * get the state of a binary
+   */
+  bool binaryGetState(uint8_t id);
 };

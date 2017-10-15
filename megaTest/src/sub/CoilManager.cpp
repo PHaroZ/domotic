@@ -30,7 +30,7 @@ template <typename DataType> bool CoilManager<DataType>::getCoilState(uint8_t id
   return bitRead(this->state, id);
 }
 
-template <typename DataType> void CoilManager<DataType>::shutterSetState(uint8_t id, uint8_t closingPercent) {
+template <typename DataType> void CoilManager<DataType>::shutterSetState(uint8_t id, int8_t closingPercent) {
   Shutter& shutterState = shutterStates[id];
 
   if (shutterState.startMovingAt) { // it is moving, stop it first
@@ -60,6 +60,9 @@ template <typename DataType> void CoilManager<DataType>::shutterSetStopped(uint8
   shutterState.startMovingAt = 0;
   this->setCoilState(this->getShutterCoilIndexOppening(id), 0);
   this->setCoilState(this->getShutterCoilIndexClosing(id), 0);
+  if (NULL != this->shutterMoveEndCallback) {
+    this->shutterMoveEndCallback(id, shutterState.closingPercent);
+  }
 }
 
 template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
@@ -69,7 +72,7 @@ template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
     Shutter& shutterState = this->shutterStates[id];
     if (shutterState.startMovingAt) { // it is moving
       // update its state & check if it must be stoppped
-      int8_t progressPercent = (now - shutterState.startMovingAt) / 0.01 / shutterState.fullMovingTime;
+      int8_t progressPercent = (now - shutterState.startMovingAt) / shutterState.fullMovingTime;
       bool shouldBeStopped   = false;
       if (shutterState.closingPercentDiffRequested < 0) { // shutter is opening
         progressPercent *= -1;                            // progress is negative
@@ -81,8 +84,8 @@ template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
           shouldBeStopped = true;
         }
       }
-      // update current state
-      shutterState.closingPercent = shutterState.closingPercentLast + progressPercent;
+      // update current state & avoid closingPercent overflow uppper to 100 or lower to 0
+      shutterState.closingPercent = min(100, max(0, shutterState.closingPercentLast + progressPercent));
       if (shouldBeStopped) {
         // must be done AFTER updating shutterState.closingPercent
         this->shutterSetStopped(id);
@@ -146,9 +149,6 @@ template <typename DataType> void CoilManager<DataType>::shutterSwapState(uint8_
   if (id < this->noShutter) {
     Shutter& shutterState = this->shutterStates[id];
 
-    Serial.print("shutterSwith ");
-    Serial.println(id);
-
     // is it moving ?
     if (shutterState.startMovingAt) {
       // yes, stop it
@@ -165,6 +165,12 @@ template <typename DataType> bool CoilManager<DataType>::binarySetState(uint8_t 
 
   this->setCoilState(coilIndex, state);
   return state;
+}
+
+template <typename DataType> bool CoilManager<DataType>::binaryGetState(uint8_t id) {
+  uint8_t coilIndex = this->getBinaryCoilIndex(id);
+
+  return this->getCoilState(coilIndex);
 }
 
 template <typename DataType> bool CoilManager<DataType>::binarySwapState(uint8_t id) {
