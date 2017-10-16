@@ -13,6 +13,10 @@ const uint8_t sensorIndexStartForSwitch  = 164;
 const uint8_t sensorIndexEndForSwitch    = sensorIndexStartForSwitch + noSwitch - 1;
 }
 
+// Orchestrator variable
+uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
+MyMessage Orchestrator::myMessage(0, 0);
+
 // RemoteDevice part
 RemoteDeviceManager Orchestrator::remoteDeviceManager;
 RemoteDevice Orchestrator::remoteDeviceRfReceiver(SNAP_ADDRESS_RFRECEIVER, 20, 100, Orchestrator::onRfReceive);
@@ -22,13 +26,11 @@ RemoteDevice Orchestrator::remoteDevices[noRemoteDevice] = {
   Orchestrator::remoteDeviceDimmer1,
 };
 
-uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
-MyMessage Orchestrator::myMessage(0, 0);
-
-// switch part
+// switches part
 SwitchManager<SwitchStatesType> Orchestrator::switchManager(Orchestrator::onSwitchChange);
+SwitchStatesType Orchestrator::switchStates = ~SwitchStatesType(0);
 
-// coil part
+// coils part
 CoilManager<uint32_t> Orchestrator::coilManager(Orchestrator::onShutterMoveEnd);
 namespace {
 ShutterPowerGroup shutterPowerGroupVelux = ShutterPowerGroup(2000, 1);
@@ -55,14 +57,11 @@ void Orchestrator::presentation() {
 
 void Orchestrator::begin() {
   Orchestrator::remoteDeviceManager.begin(Orchestrator::remoteDevices, noRemoteDevice);
-  Orchestrator::switchManager.begin(~SwitchStatesType(0));
+  Orchestrator::switchManager.begin(Orchestrator::switchStates);
   coilManager.begin(Orchestrator::shutters, noShutter, noBinary);
 
-  { // force sending current state to MySensors controller
-    Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Cold.actuatorIndex);
-    Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Warm.actuatorIndex);
-    // TODO do the same for shutter & binary
-  }
+  // force sending current state to MySensors controller
+  Orchestrator::sendMyMessageForAll();
 }
 
 void Orchestrator::process() {
@@ -161,19 +160,24 @@ void Orchestrator::onRfReceive(uint8_t * data, size_t size) {
 }
 
 void Orchestrator::onSwitchChange(SwitchStatesType states) {
+  // compute the bits which go from HIGH to LOW
+  SwitchStatesType changedBits = Orchestrator::switchStates & (~states);
+
   // each bit corresponds to the state of a switch which should be mapped to a binary coil
   // when a switch is pressed (LOW state) swap the state of a binary coil
-  for (uint8_t i = 0; i < 16; i++) {
-    if (!bitRead(states, i)) {
+  for (uint8_t i = 0; i < noBinary; i++) {
+    if (bitRead(changedBits, i)) {
       Orchestrator::actionBinarySwapState(i);
     }
   }
 
-  if (!bitRead(states, 16)) {
+  if (bitRead(changedBits, noBinary + 1)) {
     Orchestrator::actionDimmer1Swap(0);
-  } else if (!bitRead(states, 17)) {
+  } else if (bitRead(changedBits, noBinary + 2)) {
     Orchestrator::actionDimmer1Swap(1);
   }
+
+  Orchestrator::switchStates = states;
 }
 
 void Orchestrator::onShutterMoveEnd(uint8_t id, int8_t percent) {
@@ -204,6 +208,17 @@ void Orchestrator::actionShutterSetClosingPercent(uint8_t id, int8_t percent) {
 
 void Orchestrator::sendMyMessage(MyMessage &message) {
   send(message, false);
+}
+
+void Orchestrator::sendMyMessageForAll() {
+  Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Cold.actuatorIndex);
+  Orchestrator::sendMyMessageForDimmer1(sensorDimmer1Warm.actuatorIndex);
+  for (uint8_t i = 0; i < noShutter; i++) {
+    Orchestrator::sendMyMessageForShutter(i);
+  }
+  for (uint8_t i = 0; i < noBinary; i++) {
+    Orchestrator::sendMyMessageForBinary(i);
+  }
 }
 
 void Orchestrator::sendMyMessageForDimmer1(uint8_t id) {

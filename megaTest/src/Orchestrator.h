@@ -39,6 +39,7 @@ private:
   static RemoteDevice remoteDevices[noRemoteDevice];
   static Shutter shutters[noShutter];
   static SwitchManager<SwitchStatesType> switchManager;
+  static SwitchStatesType switchStates;
   static CoilManager<uint32_t> coilManager;
   static uint8_t dimmer1States[2];
   static MyMessage myMessage;
@@ -53,6 +54,7 @@ private:
   static void actionBinarySwapState(uint8_t id);
   static void actionShutterSetClosingPercent(uint8_t id, int8_t percent);
   static void sendMyMessage(MyMessage &message = Orchestrator::myMessage);
+  static void sendMyMessageForAll();
   static void sendMyMessageForBinary(uint8_t id);
   static void sendMyMessageForShutter(uint8_t id);
   static void sendMyMessageForDimmer1(uint8_t id);
