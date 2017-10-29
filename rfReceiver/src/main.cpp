@@ -5,6 +5,10 @@
 #include "SNAPChannelHardwareSerial.h"
 
 #include "RCSwitch.h"
+#include "OneWire.h"
+
+#define REQUIRESALARMS false
+#include "DallasTemperature.h"
 
 #include "KeyedButtonMapper.h"
 
@@ -23,8 +27,9 @@ const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
 const uint8_t PIN_RS485_TX_LOCK = 11;
 // max485 !RE & DE
 const uint8_t PIN_RS485_TX_CONTROL = 6;
-// const uint8_t PIN_RS485_RX         = 7;
-// const uint8_t PIN_RS485_TX         = 4;
+
+// pin for OneWire bus
+const uint8_t PIN_ONEWIRE = 4;
 
 // led pin for data received from RF
 const uint8_t PIN_CONTROL_RF_RX = 8;
@@ -47,6 +52,14 @@ RCSwitch rcSwitch = RCSwitch();
 KeyedButtonMapper<ButtonStateType,
   ButtonKeyType> keyedButtonMapper = KeyedButtonMapper<ButtonStateType, ButtonKeyType>(500);
 
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(PIN_ONEWIRE);
+// Pass the oneWire reference to Dallas Temperature.
+DallasTemperature dallasTemp(&oneWire);
+uint16_t dallasTempConversionDelay;
+uint32_t dallasTempLastRequestTime;
+int16_t dallasTempLastValue10 = ~int16_t(0);
+
 void setup() {
   snap.begin(SNAP_SPEED);
   snap.setPinRxDebug(LED_BUILTIN);
@@ -62,11 +75,19 @@ void setup() {
   pinMode(PIN_CONTROL_RF_SAVED, OUTPUT);
 
   keyedButtonMapper.begin(rfButtonValues, sizeof(rfButtonValues) / sizeof(ButtonKeyType));
+
+  {
+    dallasTemp.begin();
+    dallasTemp.setWaitForConversion(false);
+    dallasTempConversionDelay = dallasTemp.millisToWaitForConversion(dallasTemp.getResolution());
+    dallasTempRequest();
+  }
 }
 
 void loop() {
   processRcSwitch();
   processSnap();
+  processDallas();
 } // loop
 
 void processRcSwitch() {
@@ -89,13 +110,19 @@ void processSnap() {
       { // send response
         snap.sendStart(SNAP_ADDRESS_MASTER, SNAP_NO_ACK);
         {
-          ButtonStateType buttonStates = keyedButtonMapper.readStates();
-          // use of "highByte/lowByte" depends on type of ButtonStateType
-          snap.sendDataByte(highByte(buttonStates));
-          snap.sendDataByte(lowByte(buttonStates));
-          digitalWrite(PIN_CONTROL_RF_RX, LOW);
-          if (buttonStates) {
-            digitalWrite(PIN_CONTROL_RF_SAVED, LOW);
+          { // button states
+            ButtonStateType buttonStates = keyedButtonMapper.readStates();
+            // use of "highByte/lowByte" depends on type of ButtonStateType
+            snap.sendDataByte(highByte(buttonStates));
+            snap.sendDataByte(lowByte(buttonStates));
+            digitalWrite(PIN_CONTROL_RF_RX, LOW);
+            if (buttonStates) {
+              digitalWrite(PIN_CONTROL_RF_SAVED, LOW);
+            }
+          }
+          { // temp
+            snap.sendDataByte(highByte(dallasTempLastValue10));
+            snap.sendDataByte(lowByte(dallasTempLastValue10));
           }
           keyedButtonMapper.resetStates();
         }
@@ -105,4 +132,20 @@ void processSnap() {
       snap.releaseReceive();
     }
   }
+}
+
+void processDallas() {
+  if (((millis() - dallasTempLastRequestTime) > dallasTempConversionDelay) && dallasTemp.isConversionComplete()) {
+    // dallas sensor is ready to be read
+    float temp = dallasTemp.getTempCByIndex(0);
+    if (!isnan(temp)) {
+      dallasTempLastValue10 = static_cast<int>(round(temp * 10.));
+      dallasTempRequest();
+    }
+  }
+}
+
+void dallasTempRequest() {
+  dallasTemp.requestTemperatures();
+  dallasTempLastRequestTime = millis();
 }
