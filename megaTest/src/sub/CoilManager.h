@@ -33,7 +33,7 @@ private:
 public:
   CoilManager(void(*shutterMoveEndCallback)(uint8_t, int8_t)) : shutterMoveEndCallback(shutterMoveEndCallback) {  }
 
-  void begin(Shutter * shutters, size_t noShutter, size_t noBinary);
+  void begin(Shutter * shutters, uint8_t noShutter, uint8_t noBinary);
 
   /**
    * commit/apply state changes previously requested to coils.
@@ -70,6 +70,11 @@ public:
    * launch closing of ALL shutters
    */
   void shutterCloseAll();
+
+  /**
+   * launch opening of ALL shutters
+   */
+  void shutterOpenAll(bool force = true);
 
   /**
    * swap state : if shutter is currenlty moving, stop it ;

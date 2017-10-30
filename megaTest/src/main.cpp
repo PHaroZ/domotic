@@ -23,7 +23,7 @@ void setup() {
 void loop() {
   orchestrator.process();
 
-  debugCpuSpeed(10000);
+  // debugCpuSpeed(10000);
 }
 
 void receive(const MyMessage &message) {

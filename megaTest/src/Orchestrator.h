@@ -37,6 +37,8 @@ private:
   static RemoteDevice remoteDeviceRfReceiver;
   static RemoteDeviceActuator remoteDeviceDimmer1;
   static RemoteDevice remoteDevices[noRemoteDevice];
+  static ShutterPowerGroup shutterPowerGroupVelux;
+  static ShutterPowerGroup shutterPowerGroupAC;
   static Shutter shutters[noShutter];
   static SwitchManager<SwitchStatesType> switchManager;
   static SwitchStatesType switchStates;

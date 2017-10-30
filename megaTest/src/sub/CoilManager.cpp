@@ -115,7 +115,8 @@ template <typename DataType> void CoilManager<DataType>::shutterCheckAll() {
   }
 } // shutterCheckAll
 
-template <typename DataType> void CoilManager<DataType>::begin(Shutter * shutters, size_t noShutter, size_t noBinary) {
+template <typename DataType> void CoilManager<DataType>::begin(Shutter * shutters, uint8_t noShutter,
+  uint8_t noBinary) {
   this->shutterStates = shutters;
   this->noShutter     = noShutter;
   this->noBinary      = noBinary;
@@ -140,8 +141,14 @@ template <typename DataType> bool CoilManager<DataType>::process() {
 }
 
 template <typename DataType> void CoilManager<DataType>::shutterCloseAll() {
-  for (uint8_t id; id < this->noShutter; id++) {
+  for (uint8_t id = 0; id < this->noShutter; id++) {
     this->shutterSetClosingPercent(id, 100);
+  }
+}
+
+template <typename DataType> void CoilManager<DataType>::shutterOpenAll(bool force) {
+  for (uint8_t id = 0; id < this->noShutter; id++) {
+    this->shutterSetClosingPercent(id, force ? -105 : 0);
   }
 }
 

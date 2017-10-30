@@ -13,34 +13,35 @@ const uint8_t sensorIndexStartForSwitch  = 164;
 const uint8_t sensorIndexEndForSwitch    = sensorIndexStartForSwitch + noSwitch - 1;
 }
 
-// Orchestrator variable
-uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
-MyMessage Orchestrator::myMessage(0, 0);
-
 // RemoteDevice part
-RemoteDeviceManager Orchestrator::remoteDeviceManager;
 RemoteDevice Orchestrator::remoteDeviceRfReceiver(SNAP_ADDRESS_RFRECEIVER, 20, 100, Orchestrator::onRfReceive);
 RemoteDeviceActuator Orchestrator::remoteDeviceDimmer1(SNAP_ADDRESS_DIMMER1);
 RemoteDevice Orchestrator::remoteDevices[noRemoteDevice] = {
   Orchestrator::remoteDeviceRfReceiver,
   Orchestrator::remoteDeviceDimmer1,
 };
+RemoteDeviceManager Orchestrator::remoteDeviceManager;
+
+// coils part
+ShutterPowerGroup Orchestrator::shutterPowerGroupVelux(2000, 1);
+ShutterPowerGroup Orchestrator::shutterPowerGroupAC(2000, 5);
+Shutter Orchestrator::shutters[noShutter] = {
+  Shutter(Orchestrator::shutterPowerGroupVelux,  5000),
+  Shutter(Orchestrator::shutterPowerGroupVelux, 10000),
+  Shutter(Orchestrator::shutterPowerGroupAC,    15000),
+};
+CoilManager<uint32_t> Orchestrator::coilManager(Orchestrator::onShutterMoveEnd);
 
 // switches part
 SwitchManager<SwitchStatesType> Orchestrator::switchManager(Orchestrator::onSwitchChange);
 SwitchStatesType Orchestrator::switchStates = ~SwitchStatesType(0);
 
-// coils part
-CoilManager<uint32_t> Orchestrator::coilManager(Orchestrator::onShutterMoveEnd);
-namespace {
-ShutterPowerGroup shutterPowerGroupVelux = ShutterPowerGroup(2000, 1);
-ShutterPowerGroup shutterPowerGroupAC    = ShutterPowerGroup(2000, 5);
-}
-Shutter Orchestrator::shutters[noShutter] = {
-  Shutter(shutterPowerGroupVelux,  5000),
-  Shutter(shutterPowerGroupVelux, 30000),
-  Shutter(shutterPowerGroupAC,    10000),
-};
+// MySensor message holder
+MyMessage Orchestrator::myMessage(0, 0);
+
+// dimmer initial states
+uint8_t Orchestrator::dimmer1States[2] = { 0, 0 };
+
 
 void Orchestrator::presentation() {
   {
@@ -148,12 +149,14 @@ void Orchestrator::presentSensors(uint8_t type, uint8_t no, uint8_t sensorStartI
 void Orchestrator::onRfReceive(uint8_t * data, size_t size) {
   { // the first two bytes correspond to 16 rf switches, each of then is mapped to a shutter
     uint16_t value = data[0] << 8 | data[1];
-
     if (value != 0) {
-      for (size_t i = 0; i < 16; i++) {
+      for (size_t i = 0; i < noShutter; i++) {
         if (bitRead(value, i)) {
           Orchestrator::coilManager.shutterSwapState(i);
         }
+      }
+      if (bitRead(value, noShutter)) {
+        Orchestrator::coilManager.shutterOpenAll();
       }
     }
   }
