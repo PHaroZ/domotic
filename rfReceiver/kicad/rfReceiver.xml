@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>C:/Users/sestienney/Documents/arduino/domotic/rfReceiver/kicad/rfReceiver.sch</source>
+    <date>01/11/2017 11:28:16</date>
+    <tool>Eeschema 4.0.7</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>rfReceiver.sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="SH1">
+      <value>ARDUINO_MINI_PRO</value>
+      <footprint>SHIELD_ARDUINO:ARDUINO_MINI_PRO_V10</footprint>
+      <libsource lib="shield_arduino" part="ARDUINO_MINI_PRO"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9938B</tstamp>
+    </comp>
+    <comp ref="R2">
+      <value>10k</value>
+      <footprint>Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F994CF</tstamp>
+    </comp>
+    <comp ref="Q1">
+      <value>BC547</value>
+      <footprint>TO_SOT_Packages_THT:TO-92_Molded_Narrow</footprint>
+      <libsource lib="transistors" part="BC547"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F99974</tstamp>
+    </comp>
+    <comp ref="U1">
+      <value>MAX485E</value>
+      <footprint>Housings_DIP:DIP-8_W7.62mm</footprint>
+      <libsource lib="interface" part="MAX485E"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F99D1E</tstamp>
+    </comp>
+    <comp ref="C1">
+      <value>0.1uF</value>
+      <footprint>Capacitors_THT:C_Disc_D3.8mm_W2.6mm_P2.50mm</footprint>
+      <libsource lib="device" part="C"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F99E78</tstamp>
+    </comp>
+    <comp ref="J1">
+      <value>MAX485AB</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x02_Pitch2.54mm</footprint>
+      <libsource lib="conn" part="Conn_01x02_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F99F6A</tstamp>
+    </comp>
+    <comp ref="R1">
+      <value>4.7k</value>
+      <footprint>Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A078</tstamp>
+    </comp>
+    <comp ref="D1">
+      <value>LED</value>
+      <footprint>LEDs:LED_D3.0mm</footprint>
+      <libsource lib="device" part="LED"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A323</tstamp>
+    </comp>
+    <comp ref="R3">
+      <value>330</value>
+      <footprint>Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A3E0</tstamp>
+    </comp>
+    <comp ref="D2">
+      <value>LED</value>
+      <footprint>LEDs:LED_D3.0mm</footprint>
+      <libsource lib="device" part="LED"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A62A</tstamp>
+    </comp>
+    <comp ref="R4">
+      <value>330</value>
+      <footprint>Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A630</tstamp>
+    </comp>
+    <comp ref="J2">
+      <value>RF module</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x03_Pitch2.54mm</footprint>
+      <libsource lib="conn" part="Conn_01x03_Male"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>59F9A7AA</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="shield_arduino" part="ARDUINO_MINI_PRO">
+      <fields>
+        <field name="Reference">SH</field>
+        <field name="Value">ARDUINO_MINI_PRO</field>
+      </fields>
+      <pins>
+        <pin num="2" name="2" type="input"/>
+        <pin num="3" name="3_(*)" type="input"/>
+        <pin num="4" name="4" type="input"/>
+        <pin num="5" name="5_(*)" type="input"/>
+        <pin num="6" name="6_(*)" type="input"/>
+        <pin num="7" name="7" type="input"/>
+        <pin num="8" name="8" type="input"/>
+        <pin num="9" name="9_(*)" type="input"/>
+        <pin num="10" name="(*/SS)_10" type="input"/>
+        <pin num="11" name="(*/MOSI)_11" type="input"/>
+        <pin num="12" name="(MISO)_12" type="input"/>
+        <pin num="13" name="(SCK)_13" type="input"/>
+        <pin num="A0" name="A0" type="input"/>
+        <pin num="A1" name="A1" type="input"/>
+        <pin num="A2" name="A2" type="input"/>
+        <pin num="A3" name="A3" type="input"/>
+        <pin num="A4" name="A4" type="input"/>
+        <pin num="A5" name="A5" type="input"/>
+        <pin num="A6" name="A6" type="input"/>
+        <pin num="A7" name="A7" type="input"/>
+        <pin num="BLK" name="BLK" type="input"/>
+        <pin num="GND1" name="1/GND" type="input"/>
+        <pin num="GND2" name="GND/2" type="input"/>
+        <pin num="GND3" name="3/GND" type="input"/>
+        <pin num="GRN" name="GRN" type="input"/>
+        <pin num="RAW" name="RAW" type="input"/>
+        <pin num="RST1" name="RESET/1" type="input"/>
+        <pin num="RST2" name="2/RESET" type="input"/>
+        <pin num="RX/1" name="1/RX" type="input"/>
+        <pin num="RX/2" name="RX/2" type="input"/>
+        <pin num="TX/1" name="1/TX" type="input"/>
+        <pin num="TX/2" name="TX/2" type="input"/>
+        <pin num="VCC1" name="1/VCC" type="input"/>
+        <pin num="VCC2" name="2/VCC" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="transistors" part="BC547">
+      <aliases>
+        <alias>BC546</alias>
+        <alias>BC548</alias>
+        <alias>BC549</alias>
+        <alias>BC550</alias>
+        <alias>BC337</alias>
+        <alias>BC338</alias>
+      </aliases>
+      <description>45V Vce, 0.1A Ic, NPN, Small Signal Transistor, TO-92</description>
+      <docs>http://www.fairchildsemi.com/ds/BC/BC547.pdf</docs>
+      <footprints>
+        <fp>TO?92*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">BC547</field>
+        <field name="Footprint">TO_SOT_Packages_THT:TO-92_Molded_Narrow</field>
+      </fields>
+      <pins>
+        <pin num="1" name="C" type="passive"/>
+        <pin num="2" name="B" type="input"/>
+        <pin num="3" name="E" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="C">
+      <description>Unpolarized capacitor</description>
+      <footprints>
+        <fp>C_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="Conn_01x02_Male">
+      <description>Generic connector, single row, 01x02</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_??x*mm*</fp>
+        <fp>Connector*:*1x??x*mm*</fp>
+        <fp>Pin?Header?Straight?1X*</fp>
+        <fp>Pin?Header?Angled?1X*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x02_Male</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="Conn_01x03_Male">
+      <description>Generic connector, single row, 01x03</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_??x*mm*</fp>
+        <fp>Connector*:*1x??x*mm*</fp>
+        <fp>Pin?Header?Straight?1X*</fp>
+        <fp>Pin?Header?Angled?1X*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x03_Male</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="LED">
+      <description>LED generic</description>
+      <footprints>
+        <fp>LED*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">LED</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="interface" part="MAX481E">
+      <aliases>
+        <alias>MAX483E</alias>
+        <alias>MAX485E</alias>
+        <alias>MAX487E</alias>
+        <alias>MAX1487E</alias>
+      </aliases>
+      <description>Half duplex RS-485/RS-422, 2.5 Mbps, ±15kV electro-static discharge (ESD) protection, no slew-rate, with low-power shutdown, with receiver/driver enable, 32 receiver drive kapacitity, DIP-8 and SOIC-8</description>
+      <docs>https://datasheets.maximintegrated.com/en/ds/MAX1487E-MAX491E.pdf</docs>
+      <footprints>
+        <fp>DIP*W7.62mm*</fp>
+        <fp>SOIC*3.9x4.9mm*Pitch1.27mm*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">MAX481E</field>
+      </fields>
+      <pins>
+        <pin num="1" name="RO" type="output"/>
+        <pin num="2" name="~RE" type="input"/>
+        <pin num="3" name="DE" type="input"/>
+        <pin num="4" name="DI" type="input"/>
+        <pin num="5" name="GND" type="power_in"/>
+        <pin num="6" name="A" type="BiDi"/>
+        <pin num="7" name="B" type="BiDi"/>
+        <pin num="8" name="VCC" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="R">
+      <description>Resistor</description>
+      <footprints>
+        <fp>R_*</fp>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="interface">
+      <uri>C:\Program Files\KiCad\share\kicad\library\interface.lib</uri>
+    </library>
+    <library logical="shield_arduino">
+      <uri>C:\Users\sestienney\Documents\kicad_lib\shield_arduino.lib</uri>
+    </library>
+    <library logical="transistors">
+      <uri>C:\Program Files\KiCad\share\kicad\library\transistors.lib</uri>
+    </library>
+    <library logical="device">
+      <uri>C:\Program Files\KiCad\share\kicad\library\device.lib</uri>
+    </library>
+    <library logical="conn">
+      <uri>C:\Program Files\KiCad\share\kicad\library\conn.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+5V">
+      <node ref="SH1" pin="VCC2"/>
+      <node ref="U1" pin="8"/>
+      <node ref="R1" pin="1"/>
+      <node ref="J2" pin="1"/>
+      <node ref="C1" pin="2"/>
+    </net>
+    <net code="2" name="Net-(J1-Pad1)">
+      <node ref="J1" pin="1"/>
+      <node ref="U1" pin="6"/>
+    </net>
+    <net code="3" name="Net-(J1-Pad2)">
+      <node ref="J1" pin="2"/>
+      <node ref="U1" pin="7"/>
+    </net>
+    <net code="4" name="Net-(R1-Pad2)">
+      <node ref="U1" pin="2"/>
+      <node ref="SH1" pin="6"/>
+      <node ref="U1" pin="3"/>
+      <node ref="R1" pin="2"/>
+    </net>
+    <net code="5" name="Net-(SH1-PadTX/2)">
+      <node ref="U1" pin="4"/>
+      <node ref="SH1" pin="TX/2"/>
+    </net>
+    <net code="6" name="/MAX485RO">
+      <node ref="U1" pin="1"/>
+      <node ref="Q1" pin="1"/>
+    </net>
+    <net code="7" name="GND">
+      <node ref="SH1" pin="GND3"/>
+      <node ref="R4" pin="2"/>
+      <node ref="R3" pin="2"/>
+      <node ref="C1" pin="1"/>
+      <node ref="J2" pin="3"/>
+      <node ref="U1" pin="5"/>
+    </net>
+    <net code="8" name="/RFData">
+      <node ref="SH1" pin="2"/>
+      <node ref="J2" pin="2"/>
+    </net>
+    <net code="9" name="Net-(SH1-PadRST1)">
+      <node ref="SH1" pin="RST1"/>
+    </net>
+    <net code="10" name="Net-(SH1-PadGND2)">
+      <node ref="SH1" pin="GND2"/>
+    </net>
+    <net code="11" name="Net-(SH1-Pad3)">
+      <node ref="SH1" pin="3"/>
+    </net>
+    <net code="12" name="Net-(SH1-Pad4)">
+      <node ref="SH1" pin="4"/>
+    </net>
+    <net code="13" name="Net-(SH1-Pad5)">
+      <node ref="SH1" pin="5"/>
+    </net>
+    <net code="14" name="Net-(SH1-Pad7)">
+      <node ref="SH1" pin="7"/>
+    </net>
+    <net code="15" name="Net-(D2-Pad1)">
+      <node ref="R4" pin="1"/>
+      <node ref="D2" pin="1"/>
+    </net>
+    <net code="16" name="Net-(D1-Pad2)">
+      <node ref="D1" pin="2"/>
+      <node ref="SH1" pin="8"/>
+    </net>
+    <net code="17" name="Net-(D1-Pad1)">
+      <node ref="D1" pin="1"/>
+      <node ref="R3" pin="1"/>
+    </net>
+    <net code="18" name="Net-(D2-Pad2)">
+      <node ref="SH1" pin="9"/>
+      <node ref="D2" pin="2"/>
+    </net>
+    <net code="19" name="/ArduinoRX">
+      <node ref="Q1" pin="3"/>
+      <node ref="SH1" pin="RX/2"/>
+    </net>
+    <net code="20" name="Net-(SH1-PadA7)">
+      <node ref="SH1" pin="A7"/>
+    </net>
+    <net code="21" name="Net-(SH1-PadBLK)">
+      <node ref="SH1" pin="BLK"/>
+    </net>
+    <net code="22" name="Net-(SH1-PadGRN)">
+      <node ref="SH1" pin="GRN"/>
+    </net>
+    <net code="23" name="Net-(SH1-PadRAW)">
+      <node ref="SH1" pin="RAW"/>
+    </net>
+    <net code="24" name="Net-(SH1-PadRX/1)">
+      <node ref="SH1" pin="RX/1"/>
+    </net>
+    <net code="25" name="Net-(SH1-PadTX/1)">
+      <node ref="SH1" pin="TX/1"/>
+    </net>
+    <net code="26" name="Net-(SH1-PadVCC1)">
+      <node ref="SH1" pin="VCC1"/>
+    </net>
+    <net code="27" name="Net-(SH1-PadGND1)">
+      <node ref="SH1" pin="GND1"/>
+    </net>
+    <net code="28" name="Net-(SH1-PadA6)">
+      <node ref="SH1" pin="A6"/>
+    </net>
+    <net code="29" name="Net-(SH1-PadRST2)">
+      <node ref="SH1" pin="RST2"/>
+    </net>
+    <net code="30" name="Net-(Q1-Pad2)">
+      <node ref="R2" pin="1"/>
+      <node ref="Q1" pin="2"/>
+    </net>
+    <net code="31" name="Net-(R2-Pad2)">
+      <node ref="R2" pin="2"/>
+      <node ref="SH1" pin="11"/>
+    </net>
+    <net code="32" name="Net-(SH1-PadA0)">
+      <node ref="SH1" pin="A0"/>
+    </net>
+    <net code="33" name="Net-(SH1-Pad10)">
+      <node ref="SH1" pin="10"/>
+    </net>
+    <net code="34" name="Net-(SH1-PadA1)">
+      <node ref="SH1" pin="A1"/>
+    </net>
+    <net code="35" name="Net-(SH1-Pad12)">
+      <node ref="SH1" pin="12"/>
+    </net>
+    <net code="36" name="Net-(SH1-PadA2)">
+      <node ref="SH1" pin="A2"/>
+    </net>
+    <net code="37" name="Net-(SH1-Pad13)">
+      <node ref="SH1" pin="13"/>
+    </net>
+    <net code="38" name="Net-(SH1-PadA3)">
+      <node ref="SH1" pin="A3"/>
+    </net>
+    <net code="39" name="Net-(SH1-PadA4)">
+      <node ref="SH1" pin="A4"/>
+    </net>
+    <net code="40" name="Net-(SH1-PadA5)">
+      <node ref="SH1" pin="A5"/>
+    </net>
+  </nets>
+</export>
