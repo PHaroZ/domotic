@@ -20,14 +20,14 @@ const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
 
 // NPN switch which control data flow from MAX485 RO to arduino RXI
 // by default switch is open (until begin()) to avoid conflict with sketch uploading
-const uint8_t PIN_RS485_TX_LOCK = 11;
+const uint8_t PIN_RS485_TX_LOCK = 4;
 // max485 !RE & DE
-const uint8_t PIN_RS485_TX_CONTROL = 6;
+const uint8_t PIN_RS485_TX_CONTROL = 3;
 
 // led pin for data received from RF
-const uint8_t PIN_CONTROL_RF_RX = 8;
+const uint8_t PIN_CONTROL_RF_RX = 6;
 // led pin for data validated & saved from RF
-const uint8_t PIN_CONTROL_RF_SAVED = 9;
+const uint8_t PIN_CONTROL_RF_SAVED = 7;
 
 ButtonKeyType rfButtonValues[] = {
   3544968, // remote1 buttonA
