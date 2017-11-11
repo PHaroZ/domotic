@@ -23,6 +23,7 @@ const uint8_t SNAP_ADDRESS_RFRECEIVER = 3;
 const uint8_t PIN_RS485_TX_LOCK = 4;
 // max485 !RE & DE
 const uint8_t PIN_RS485_TX_CONTROL = 3;
+const uint8_t PIN_RS485_RX_LED     = LED_BUILTIN;
 
 // led pin for data received from RF
 const uint8_t PIN_CONTROL_RF_RX = 6;
@@ -34,6 +35,19 @@ ButtonKeyType rfButtonValues[] = {
   3544964, // remote1 buttonB
   3544962, // remote1 buttonC
   3544961, // remote1 buttonD
+  3544970, // remote2 buttonA
+  3544971, // remote2 buttonB
+  3544972, // remote2 buttonC
+  3544973, // remote2 buttonD
+  3544980, // remote3 buttonA
+  3544981, // remote3 buttonB
+  3544982, // remote3 buttonC
+  3544983, // remote3 buttonD
+  3544990, // remote4 buttonA
+  3544991, // remote4 buttonB
+  3544992, // remote4 buttonC
+  3544993, // remote4 buttonD
+  // when adding new values, verifying ButtonStateType
 };
 
 
@@ -47,7 +61,7 @@ KeyedButtonMapper<ButtonStateType,
 
 void setup() {
   snap.begin(SNAP_SPEED);
-  snap.setPinRxDebug(LED_BUILTIN);
+  snap.setPinRxDebug(PIN_RS485_RX_LED);
 
   rcSwitch.enableReceive(0); // Receiver on interrupt 0 => that is pin #2
 
