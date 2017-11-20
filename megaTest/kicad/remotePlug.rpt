@@ -1,0 +1,104 @@
+** Drc report for C:\Users\sestienney\Documents\arduino\domotic\megaTest\kicad\input.kicad_pcb **
+** Created on  **
+
+** Found 0 DRC errors **
+
+** Found 32 unconnected pads **
+ErrType(2): Unconnected pads
+    @ (71,120 mm,48,260 mm): Pad 11 on F.Cu, B.Cu, Internal, Non-copper of U101 net Net-(J101-Pad1)
+    @ (93,980 mm,35,560 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R101
+ErrType(2): Unconnected pads
+    @ (71,120 mm,45,720 mm): Pad 12 on F.Cu, B.Cu, Internal, Non-copper of U101 net Net-(J101-Pad2)
+    @ (93,980 mm,38,100 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R102
+ErrType(2): Unconnected pads
+    @ (71,120 mm,43,180 mm): Pad 13 on F.Cu, B.Cu, Internal, Non-copper of U101 net Net-(J101-Pad3)
+    @ (93,980 mm,40,640 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R103
+ErrType(2): Unconnected pads
+    @ (93,980 mm,43,180 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R104 net Net-(J101-Pad4)
+    @ (71,120 mm,40,640 mm): Pad 14 on F.Cu, B.Cu, Internal, Non-copper of U101
+ErrType(2): Unconnected pads
+    @ (63,500 mm,40,640 mm): Pad 3 on F.Cu, B.Cu, Internal, Non-copper of U101 net Net-(J101-Pad5)
+    @ (93,980 mm,45,720 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R105
+ErrType(2): Unconnected pads
+    @ (63,500 mm,43,180 mm): Pad 4 on F.Cu, B.Cu, Internal, Non-copper of U101 net Net-(J101-Pad6)
+    @ (93,980 mm,48,260 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R106
+ErrType(2): Unconnected pads
+    @ (93,980 mm,50,800 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R107 net Net-(J101-Pad7)
+    @ (63,500 mm,45,720 mm): Pad 5 on F.Cu, B.Cu, Internal, Non-copper of U101
+ErrType(2): Unconnected pads
+    @ (93,980 mm,53,340 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R108 net Net-(J101-Pad8)
+    @ (63,500 mm,48,260 mm): Pad 6 on F.Cu, B.Cu, Internal, Non-copper of U101
+ErrType(2): Unconnected pads
+    @ (93,980 mm,60,960 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R111 net Net-(J111-Pad1)
+    @ (71,120 mm,73,660 mm): Pad 11 on F.Cu, B.Cu, Internal, Non-copper of U111
+ErrType(2): Unconnected pads
+    @ (71,120 mm,71,120 mm): Pad 12 on F.Cu, B.Cu, Internal, Non-copper of U111 net Net-(J111-Pad2)
+    @ (93,980 mm,63,500 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R112
+ErrType(2): Unconnected pads
+    @ (93,980 mm,66,040 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R113 net Net-(J111-Pad3)
+    @ (71,120 mm,68,580 mm): Pad 13 on F.Cu, B.Cu, Internal, Non-copper of U111
+ErrType(2): Unconnected pads
+    @ (71,120 mm,66,040 mm): Pad 14 on F.Cu, B.Cu, Internal, Non-copper of U111 net Net-(J111-Pad4)
+    @ (93,980 mm,68,580 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R114
+ErrType(2): Unconnected pads
+    @ (63,500 mm,66,040 mm): Pad 3 on F.Cu, B.Cu, Internal, Non-copper of U111 net Net-(J111-Pad5)
+    @ (93,980 mm,71,120 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R115
+ErrType(2): Unconnected pads
+    @ (63,500 mm,68,580 mm): Pad 4 on F.Cu, B.Cu, Internal, Non-copper of U111 net Net-(J111-Pad6)
+    @ (93,980 mm,73,660 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R116
+ErrType(2): Unconnected pads
+    @ (63,500 mm,71,120 mm): Pad 5 on F.Cu, B.Cu, Internal, Non-copper of U111 net Net-(J111-Pad7)
+    @ (93,980 mm,76,200 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R117
+ErrType(2): Unconnected pads
+    @ (93,980 mm,78,740 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R118 net Net-(J111-Pad8)
+    @ (63,500 mm,73,660 mm): Pad 6 on F.Cu, B.Cu, Internal, Non-copper of U111
+ErrType(2): Unconnected pads
+    @ (71,120 mm,99,060 mm): Pad 11 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad1)
+    @ (93,980 mm,86,360 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R121
+ErrType(2): Unconnected pads
+    @ (93,980 mm,88,900 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R122 net Net-(J121-Pad2)
+    @ (71,120 mm,96,520 mm): Pad 12 on F.Cu, B.Cu, Internal, Non-copper of U121
+ErrType(2): Unconnected pads
+    @ (71,120 mm,93,980 mm): Pad 13 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad3)
+    @ (93,980 mm,91,440 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R123
+ErrType(2): Unconnected pads
+    @ (71,120 mm,91,440 mm): Pad 14 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad4)
+    @ (93,980 mm,93,980 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R124
+ErrType(2): Unconnected pads
+    @ (63,500 mm,91,440 mm): Pad 3 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad5)
+    @ (93,980 mm,96,520 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R125
+ErrType(2): Unconnected pads
+    @ (63,500 mm,93,980 mm): Pad 4 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad6)
+    @ (93,980 mm,99,060 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R126
+ErrType(2): Unconnected pads
+    @ (63,500 mm,96,520 mm): Pad 5 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad7)
+    @ (93,980 mm,101,600 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R127
+ErrType(2): Unconnected pads
+    @ (63,500 mm,99,060 mm): Pad 6 on F.Cu, B.Cu, Internal, Non-copper of U121 net Net-(J121-Pad8)
+    @ (93,980 mm,104,140 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R128
+ErrType(2): Unconnected pads
+    @ (71,120 mm,124,460 mm): Pad 11 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad1)
+    @ (93,980 mm,111,760 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R131
+ErrType(2): Unconnected pads
+    @ (71,120 mm,121,920 mm): Pad 12 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad2)
+    @ (93,980 mm,114,300 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R132
+ErrType(2): Unconnected pads
+    @ (71,120 mm,119,380 mm): Pad 13 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad3)
+    @ (93,980 mm,116,840 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R133
+ErrType(2): Unconnected pads
+    @ (71,120 mm,116,840 mm): Pad 14 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad4)
+    @ (93,980 mm,119,380 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R134
+ErrType(2): Unconnected pads
+    @ (63,500 mm,116,840 mm): Pad 3 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad5)
+    @ (93,980 mm,121,920 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R135
+ErrType(2): Unconnected pads
+    @ (93,980 mm,124,460 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R136 net Net-(J131-Pad6)
+    @ (63,500 mm,119,380 mm): Pad 4 on F.Cu, B.Cu, Internal, Non-copper of U131
+ErrType(2): Unconnected pads
+    @ (63,500 mm,121,920 mm): Pad 5 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad7)
+    @ (93,980 mm,127,000 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R137
+ErrType(2): Unconnected pads
+    @ (63,500 mm,124,460 mm): Pad 6 on F.Cu, B.Cu, Internal, Non-copper of U131 net Net-(J131-Pad8)
+    @ (93,980 mm,129,540 mm): Pad 2 on F.Cu, B.Cu, Internal, Non-copper of R138
+
+** End of Report **
