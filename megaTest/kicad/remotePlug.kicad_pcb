@@ -3,9 +3,9 @@
   (general
     (links 240)
     (no_connects 32)
-    (area 0 0 0 0)
+    (area 48.184999 29.134999 132.155001 141.045001)
     (thickness 1.6)
-    (drawings 0)
+    (drawings 4)
     (tracks 431)
     (zones 0)
     (modules 53)
@@ -87,7 +87,7 @@
       (mirror false)
       (drillshape 1)
       (scaleselection 1)
-      (outputdirectory ""))
+      (outputdirectory ./))
   )
 
   (net 0 "")
@@ -2585,6 +2585,11 @@
     )
   )
 
+  (gr_line (start 48.26 140.97) (end 48.26 29.21) (angle 90) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 132.08 140.97) (end 48.26 140.97) (angle 90) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 132.08 29.21) (end 132.08 140.97) (angle 90) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 48.26 29.21) (end 132.08 29.21) (angle 90) (layer Edge.Cuts) (width 0.15))
+
   (segment (start 59.69 115.57) (end 59.69 116.84) (width 0.25) (layer B.Cu) (net 1))
   (segment (start 60.96 104.14) (end 60.96 106.68) (width 0.25) (layer B.Cu) (net 1) (tstamp 5A132034))
   (via (at 60.96 106.68) (size 0.6) (drill 0.4) (layers F.Cu B.Cu) (net 1))
@@ -2876,7 +2881,7 @@
   (segment (start 93.98 116.84) (end 99.06 116.84) (width 0.25) (layer B.Cu) (net 29))
   (segment (start 71.12 116.84) (end 73.66 116.84) (width 0.25) (layer B.Cu) (net 30))
   (segment (start 99.06 119.38) (end 93.98 119.38) (width 0.25) (layer B.Cu) (net 30))
-  (segment (start 63.5 116.84) (end 60.96 116.84) (width 0.25) (layer B.Cu) (net 31) (status 400000))
+  (segment (start 63.5 116.84) (end 60.96 116.84) (width 0.25) (layer B.Cu) (net 31))
   (segment (start 93.98 121.92) (end 99.06 121.92) (width 0.25) (layer B.Cu) (net 31))
   (segment (start 63.5 119.38) (end 60.96 119.38) (width 0.25) (layer B.Cu) (net 32))
   (segment (start 99.06 124.46) (end 93.98 124.46) (width 0.25) (layer B.Cu) (net 32))
